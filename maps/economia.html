@@ -1,0 +1,342 @@
+<!doctype><html><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Odyssey.js Slides</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png" rel="icon" type="image/x-icon">
+  <link href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png" rel="icon" type="image/png">
+
+  <link href="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/themes/css/cartodb.css" rel="stylesheet">
+  <link href="http://cartodb.github.io/odyssey.js/sandbox/css/slides.css" rel="stylesheet">
+  <script src="http://cartodb.github.io/odyssey.js/vendor/modernizr-2.6.2.min.js"></script>
+  <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
+    <![endif]-->
+</head>
+<body>
+  <div id="map" style="width: 100%; height: 100%;"></div>
+
+  <div id="slides_container" style="display: block;">
+    <div id="dots"></div>
+
+    <div id="slides"></div>
+
+    <ul id="navButtons">
+      <li><a class="prev"></a></li>
+      <li><a class="next"></a></li>
+    </ul>
+  </div>
+
+  <div id="credits">
+    <span class="title" id="title">Title</span>
+    <span class="author"><strong id="author">By Name using</strong> <a href="http://cartodb.github.io/odyssey.js/">Odyssey.js</a><span>
+  </span></span></div>
+
+  <script src="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
+  <script src="http://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
+
+  
+  
+  <script>
+    var resizePID;
+
+    function clearResize() {
+      clearTimeout(resizePID);
+      resizePID = setTimeout(function() { adjustSlides(); }, 100);
+    }
+
+    if (!window.addEventListener) {
+      window.attachEvent("resize", function load(event) {
+        clearResize();
+      });
+    } else {
+      window.addEventListener("resize", function load(event) {
+        clearResize();
+      });
+    }
+
+    function adjustSlides() {
+      var container = document.getElementById("slides_container"),
+          slide = document.querySelectorAll('.selected_slide')[0];
+
+      if (slide) {
+        if (slide.offsetHeight+169+40+80 >= window.innerHeight) {
+          container.style.bottom = "80px";
+
+          var h = container.offsetHeight;
+
+          slide.style.height = h-169+"px";
+          slide.classList.add("scrolled");
+        } else {
+          container.style.bottom = "auto";
+          container.style.minHeight = "0";
+
+          slide.style.height = "auto";
+          slide.classList.remove("scrolled");
+        }
+      }
+    }
+
+    var resizeAction = O.Action(function() {
+      function imageLoaded() {
+        counter--;
+
+        if (counter === 0) {
+          adjustSlides();
+        }
+      }
+      var images = $('img');
+      var counter = images.length;
+
+      images.each(function() {
+        if (this.complete) {
+          imageLoaded.call( this );
+        } else {
+          $(this).one('load', imageLoaded);
+        }
+      });
+    });
+
+    function click(el) {
+      var element = O.Core.getElement(el);
+      var t = O.Trigger();
+
+      // TODO: clean properly
+      function click() {
+        t.trigger();
+      }
+
+      if (element) element.onclick = click;
+
+      return t;
+    }
+
+    O.Template({
+      init: function() {
+        var seq = O.Triggers.Sequential();
+
+        var baseurl = this.baseurl = 'http://{s}.api.cartocdn.com/base-light/{z}/{x}/{y}.png';
+        var map = this.map = L.map('map').setView([0, 0.0], 4);
+        var basemap = this.basemap = L.tileLayer(baseurl, {
+          attribution: 'data OSM - map CartoDB'
+        }).addTo(map);
+
+        // enanle keys to move
+        O.Keys().on('map').left().then(seq.prev, seq)
+        O.Keys().on('map').right().then(seq.next, seq)
+
+        click(document.querySelectorAll('.next')).then(seq.next, seq)
+        click(document.querySelectorAll('.prev')).then(seq.prev, seq)
+
+        var slides = O.Actions.Slides('slides');
+        var story = O.Story()
+
+        this.story = story;
+        this.seq = seq;
+        this.slides = slides;
+        this.progress = O.UI.DotProgress('dots').count(0);
+      },
+
+      update: function(actions) {
+        var self = this;
+
+        if (!actions.length) return;
+
+        this.story.clear();
+
+        if (this.baseurl && (this.baseurl !== actions.global.baseurl)) {
+          this.baseurl = actions.global.baseurl || 'http://0.api.cartocdn.com/base-light/{z}/{x}/{y}.png';
+
+          this.basemap.setUrl(this.baseurl);
+        }
+
+        if (this.cartoDBLayer && ("http://"+self.cartoDBLayer.options.user_name+".cartodb.com/api/v2/viz/"+self.cartoDBLayer.options.layer_definition.stat_tag+"/viz.json" !== actions.global.vizjson)) {
+          this.map.removeLayer(this.cartoDBLayer);
+
+          this.cartoDBLayer = null;
+          this.created = false;
+        }
+
+        if (actions.global.vizjson && !this.cartoDBLayer) {
+          if (!this.created) { // sendCode debounce < vis loader
+            cdb.vis.Loader.get(actions.global.vizjson, function(vizjson) {
+              self.map.fitBounds(vizjson.bounds);
+
+              cartodb.createLayer(self.map, vizjson)
+                .done(function(layer) {
+                  self.cartoDBLayer = layer;
+
+                  var sublayer = layer.getSubLayer(0),
+                      layer_name = layer.layers[0].options.layer_name,
+                      filter = actions.global.cartodb_filter ? " WHERE "+actions.global.cartodb_filter : "";
+
+                  sublayer.setSQL("SELECT * FROM "+layer_name+filter)
+
+                  self.map.addLayer(layer);
+
+                  self._resetActions(actions);
+                }).on('error', function(err) {
+                  console.log("some error occurred: " + err);
+                });
+            });
+
+            this.created = true;
+          }
+
+          return;
+        }
+
+        this._resetActions(actions);
+      },
+
+      _resetActions: function(actions) {
+        // update footer title and author
+        var title_ = actions.global.title === undefined ? '' : actions.global.title,
+            author_ = actions.global.author === undefined ? 'Using' : 'By '+actions.global.author+' using';
+
+        document.getElementById('title').innerHTML = title_;
+        document.getElementById('author').innerHTML = author_;
+        document.title = title_ + " | " + author_ +' Odyssey.js';
+
+        var sl = actions;
+
+        document.getElementById('slides').innerHTML = ''
+        this.progress.count(sl.length);
+
+        // create new story
+        for(var i = 0; i < sl.length; ++i) {
+          var slide = sl[i];
+          var tmpl = "<div class='slide' style='diplay:none'>";
+
+          tmpl += slide.html();
+          tmpl += "</div>";
+          document.getElementById('slides').innerHTML += tmpl;
+
+          this.progress.step(i).then(this.seq.step(i), this.seq)
+
+          var actions = O.Parallel(
+            this.slides.activate(i),
+            slide(this),
+            this.progress.activate(i),
+            resizeAction
+          );
+
+          actions.on("finish.app", function() {
+            adjustSlides();
+          });
+
+          this.story.addState(
+            this.seq.step(i),
+            actions
+          )
+        }
+
+        this.story.go(this.seq.current());
+      },
+
+      changeSlide: function(n) {
+        this.seq.current(n);
+      }
+    });
+  </script>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-20934186-21', 'cartodb.github.io');
+    ga('send', 'pageview');
+  </script>
+
+  <script src="http://fast.fonts.net/jsapi/3af16084-ba56-49ca-b37d-0b49b59e1927.js" type="text/javascript"></script>
+
+<script id="md_template" type="text/template">```
+-title: "Atlas de la Peste Negra"
+-author: "Clara Rodríguez Fernández"
+-baseurl: "http://a.tiles.mapbox.com/v4/clara92r.dwdxcsnz/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg"
+-vizjson:"https://clara92r.cartodb.com/api/v2/viz/22b6e43e-9073-11e5-80d4-0e787de82d45/viz.json"
+```
+
+#Precios, salarios y valores monetarios durante la epidemia
+```
+- center: [47.3, -1.1316]
+- zoom: 5
+```
+
+El hecho de una gran mortandad como la que trajo esta enfermedad  afectó indudablemente a la demanda de alimentos y otros productos, lo cual se tradujo en una drástica caída general de los precios tras un fuerte repunte, pero también a la caída de la recaudación impositiva por parte de los regentes, obligados a subir los impuestos para mantener el sistema vigente.
+
+![impuestos](http://static.losojosdehipatia.com.es/wp-content/uploads/Feudalismo-Sociedad2.jpg)
+Ante la desaparición de gran parte de los contribuyentes, e incluso de cargos públicos, se dieron situaciones de caos que impidieron la recaudación efectiva de impuestos como le sucedió a Felipe VI en Francia.
+
+Los salarios también se vieron profundamente afectados por la escasez del personal ya que los campesinos aumentaron sus demandas, hasta el punto de que el rey Pedro I de Castilla tuvo que crear un decreto para regular precios y salarios, aunque en ningún caso fue efectivo del todo por el estado de anarquía imperante. De hecho, se intentaron fórmulas similares por toda Europa con resultados parecidos.
+
+
+
+#Alimentos básicos en Brujas
+```
+- center: [51.2198, 3.2310]
+- zoom:8
+```
+Los datos que se han recogido sobre la economía en esta ciudad corresponden a los precios de alimentos básicos. En cada alimento se aprecia una pequeña bajada en los años de epidemia seguida de un fuerte repunte en los años posteriores. A partir de 1354 vuelve a haber otra caída de precios debido a un posible rebrote de la enfermedad.
+
+La evolución de los precios se puede ver pinchando en los siguientes enlaces:
+
+
+ [Trigo](https:plot.ly/~setamalvada/13/precio-trigo-vs-ano/?share_key=Zz5YfvEK1qyhUZ21f2ofT3) 
+ 
+ [Mantequilla](https://plot.ly/~setamalvada/18/precio-de-la-mantequilla-en-brujas-en-florines-por-835-kg/
+)
+
+[Centeno](https://plot.ly/~setamalvada/22/precio-del-centeno-en-brujas-en-florines-por-cada-172-litros/)
+
+
+[Cebada](https://plot.ly/~setamalvada/24/precio-de-la-cebada-en-brujas-en-florines-por-cada-172-litros/)
+
+[Avena](https://plot.ly/~setamalvada/26/precio-de-la-avena-en-brujas-en-florines-por-cada-172-litros/)
+
+[Queso](https://plot.ly/~setamalvada/28/precio-del-queso-en-brujas-en-florines-por-cada-606-kilogramos/)
+
+
+
+#La evolución del penique en Inglaterra
+```
+- center: [53.2258, -1.7578]
+- zoom: 5
+```
+El valor del [penique](https://plot.ly/~setamalvada/39/valor-de-penique-en-la-inglaterra-bajomedieval/
+)
+se caracteriza por una caída en picado desde la llegada de la plaga, (mayo de 1348) seguido de una gran subida desde 1349 a 1352. Esto refleja la depresión y la posterior inflación que sufrió la producción y el consumo en tiempos de epidemia. 
+![banqueros](https://gestoriachico.files.wordpress.com/2014/10/economc3ada-medieval-2.jpg)
+
+
+#La evolución de la lira florentina en la Toscana
+```
+- center: [43.7711, 11.2610]
+- zoom: 7
+```
+La evolución del valor de la
+[lira florentina](https://plot.ly/~setamalvada/41/valor-de-la-lira-en-florencia/)
+sigue un patrón parecido a la del penique en los tiempos de la enfermedad aunque con un valor más bajo probablemente debido a la superioridad económica de Inglaterra sobre las repúblicas libres italianas durante esos años.
+![banqueros](http://www.escuriosity.com/img/curiosidades/curiosidad58.jpg)
+#Los salarios en la Toscana
+```
+- center: [43.7711, 11.2610]
+- zoom: 7
+```
+La región de Toscana gozaba de ser una de las regiones más modernizadas de toda Italia. El hecho de que los oficios pertenecientes a la industria eran generalmente trabajos en las ciudades sin sujeción feudal, los salarios eras muy superiores a los que cobraban los jornaleros.
+![artesanos](https://elblogdecaminart.files.wordpress.com/2014/02/image.jpg)
+En el [gráfico de evolución](https://plot.ly/~setamalvada/48/salarios-en-la-toscana/) de los salarios se ve como ambos siguen un patrón casi idéntico, en el cual durante los años de epidemia alcanzan el máximo. Esto se debe a que al haber menor mano de obra se necesita que un trabajador realice el trabajo de dos o más trabajadores habiendo una subida general de salarios como consecuencia.
+#Fuentes
+```
+- center: [47.3, -1.1316]
+- zoom: 5
+```
+[Precios de alimentos en Brujas](http://www.iisg.nl/hpw/donat.php)
+
+[Valores de la moneda en Inglaterra y Toscana/Salarios en Toscana ](http://www.paolomalanima.it/default_file/Page646.htm)
+ </script></body></html>

@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+<head>  
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas de la Peste Negra</title>
+  <meta name="description" content="An introduction to the Bushwick Community Map">
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+  <link rel="stylesheet" href="http://cartodb.github.io/odyssey.js/sandbox/css/slides.css">  
+  <link rel="stylesheet" href="cartodb.css">  
+  <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.4/mapbox.css' rel='stylesheet'/>  
+  
+  <style>
+  .ui{
+  position: absolute;
+  background-color: hsla(0, 0%, 100%, 0.92);  
+  border: 2px solid hsl(0, 0%, 100%);
+  border-radius: 7px;  
+  font-family: Helvetica, sans-serif;
+}
+  .ui.legend {
+  position: absolute;
+  z-index: 200;
+  right: 40px;
+  bottom: 20px;
+  width: 200px;
+  padding: 12px;   
+}
+
+.ui.legend h4 {
+  text-align: left;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.legend .legend-scale ul {
+  margin: 0;
+  margin-bottom: 5px;
+  padding: 0;
+  float: left;
+  list-style: none;
+}
+
+.legend .legend-scale ul li {
+  font-size: 13px;
+  list-style: none;
+  margin-left: 0;
+  line-height: 18px;
+  margin-bottom: 0px;
+}
+
+.legend ul.legend-labels li span {
+  display: block;
+  float: left;
+  height: 16px;
+  width: 30px;
+  margin-right: 5px;
+  margin-left: 1px;
+  border: 0.5px solid #000000;
+  opacity: 1;
+}
+
+.legend .legend-source {
+  font-size: 12px;
+  color: #999;
+  clear: both;
+}
+
+.ui.legend a {
+  color: #777;
+  width: 100%;
+  margin: inherit;
+  padding: 0 2px;
+  display: inline;
+  background-color: #fff;
+  box-shadow: 0;
+  border: 0;
+  border-radius: 0;
+  text-decoration: underline;  
+}
+
+.ui.legend a:hover {
+  color:#FFF;
+  background-color: #777;
+}
+
+    slides_container {
+      text-align: left;
+      margin: 0; padding: 0;
+      font-family: Georgia;
+      background: #EEE;
+    }
+    h2 {
+      font-weight: normal;
+    }    
+    #slides_container .slide {
+      max-height: 600px;
+    }    
+  </style>
+</head>
+<body>
+    <div id="map" style="width: 100%; height: 100%"></div>
+	
+	<!-- empty div to render the legends template in -->
+  <div id="ui-legend" class="ui legend">
+    <h4>Rendimiento de los cultivos en bushell/acre</h4>
+    <div class="legend-scale">
+      <ul class="legend-labels">
+        
+        <li><span style="background:#dddda5;"></span>0 - 2.26</li>
+        
+        <li><span style="background:#ffcc00;"></span>2.27 - 2.64</li>
+        
+        <li><span style="background:#cca300;"></span>2.65 - 3.08</li>
+        
+        <li><span style="background:#997a00;"></span>3.09 - 4.16</li>
+        
+        <li><span style="background:#4c3d00;"></span>4.17 - 6.54</li>
+        
+      </ul>
+    </div>
+	
+    
+  </div>
+	<div id="slides_container" style="display:block;">
+    <div id="dots"></div>
+    <div id="slides">
+      <div class="slide">
+        <h1 id="rheingold">El desarrollo de la agricultura durante la Peste Negra</h1>
+        <p>
+		Consecuencia inmediata de la mortalidad fué el abandono de las tierras. Los campesinos, presa de la epidemia, mueren y los pocos supervivientes huyen hacia las ciudades o se quedan trabajando las tierras. Las cosechas, motor económico de la época, quedan abandonadas.En Alemania, por ejemplo, se estima que el 66% de las tierras quedaron sin dueño a causa de la muerte de sus propietarios.
+        
+		</p>
+        <p>
+          Los terratenientes se encontraron con un gran problema para mantener cultivadas sus tierras evitando que se perdiera su fertilidad, por lo que tuvieron que abaratar o eliminar sus rentas. Las ganancias disminuyeron drásticamente, como es el caso del norte de Italia cuya caída de la producción agrícola se estima que fué del 40% en el periodo comprendido entre 1340 y 1370.
+        </p>
+       <p>
+	   En este mapa se muestra el rendimiento medio de los cultivos de el sur de Inglaterra antes, durante y después de la epidemia. En estadística agrícola se entiende generalmente por rendimiento la cantidad media del producto agrícola por unidad de superficie cultivada.
+       </p>
+        <p>
+		El rendimiento se medía por esa época en bushels (0,35 hectolitros) por acre de superficie (13.53 kilómetros cuadrados).
+        </p>
+        </div>
+      <div class="slide">
+        <h1 id="far">Inglaterra 1347</h1>
+        <p>
+          En este año la cosecha tiene una media de 3.60 bushels por acre que viene a ser unos 126.86 litros por cada 0.4 hectáreas. La cosecha es mayormente estable en todos los condados.
+        </p>
+        <p>
+		La Peste Negra aún estaba en zona mediterránea y no llegaría a Inglaterra hasta, al menos, la primera mitad de 1348.
+		</p>
+        </div>
+      <div class="slide">
+        <h1>Inglaterra 1348</h1>
+        <p>
+		En este año se observa una recesión del rendimiento (2.47bushels por acre de media). Se puede hacer alusión segura  a la peste puesto que, según el mapa de propagación, la enfermedad pisó tierra anglosajona en febrero de 1348. Esta baja de rendimiento puede deberse a la suma de varias causasademás de la plaga, como por ejemplo: 
+        </p>
+        <p>
+		•	Causas ambientales. Se especula que hubo en la Baja Edad Media una disminución de las temperaturas. A medida que la temperatura baja, el desarrollo del trigo es más lento; es más, a temperaturas bajo cero los tejidos jóvenes pueden producir un daño severo a la planta. 
+		</p>  
+        <p>	
+•	Cambios del uso de la tierra. El auge de la exportación lanera de Inglaterra pudo haber tenido algo que ver con los cambios de uso de la tierra en este país.
+		</p>
+      </div>
+      <div class="slide">
+        <h1>Inglaterra 1349</h1>
+        <p>
+		Ya en este año, la Peste Negra se encontraba causando estragos en toda la región. El rendimiento medio mejora ligeramente (2.66) respecto al del año anterior (2.47).
+		</p>              
+      </div>
+      <div class="slide">
+        <h1 id="colony"> Inglaterra 1350 </h1>
+        <p>
+		El rendimiento se sigue manteniendo en torno a 2.5.Sin embargo, a diferencia del año anterior, el cual tenía algún condado con un rendimiento muy por encima de la media, este año se caracteriza por una bajada del rendimiento general.
+		</p>
+        </div>
+      <div class="slide">
+        <h1>Inglaterra 1351</h1>
+        <p>
+		Por último, en este año ha habido un crecimiento general, síntoma del amaine del primer brote de peste en la zona anglosajona. 
+		</p>
+	   </div>
+	  <div class="slide">
+	   <h1>Fuentes</h1>
+        <p>
+		<A HREF="http://www.cropyields.ac.uk/">Three centuries of English crops yields database</A>
+		</p>
+        </div>
+      </div> 
+  
+    <ul id="navButtons">
+      <li><a class="prev"></a></li>
+      <li><a class="next"></a></li>
+    </ul>
+  </div>
+<!--   <div id="credits">
+    <span class="title" id="title">Bushwick Community Map Introduction</span>
+    <span class="author"><strong id="author">By @clhenrick using</strong> <a href="http://cartodb.github.io/odyssey.js/">Odyssey.js</a><span></span></span>
+  </div>  -->
+
+  <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
+  <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.4/mapbox.standalone.js'></script>
+  <script src="http://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
+  
+  <script>
+  
+
+  var app = app || {};
+
+  app.odysseyTest = (function(w,d,$,O) {
+
+    var el = {
+      map : null,
+      tileLayer : null,
+      story : null,
+      bushwick : null,
+      rheingold : null,
+      colony : null,
+      linden : null,
+      featureGroup : null,
+      rheingoldJson : null,
+      taxLots: null,
+      dobPermitsNB : null,
+      dobPermitsA1: null,
+      dobPermitsA2A3: null,
+      myLayer0: null,	   //Lo hemos añadido nosotros
+	  myLayer1: null,	   //Lo hemos añadido nosotros
+	  myLayer2: null,	   //Lo hemos añadido nosotros
+	  myLayer3: null,	   //Lo hemos añadido nosotros
+	  myLayer4: null,	   //Lo hemos añadido nosotros
+	  myLayer5: null,	   //Lo hemos añadido nosotros
+	  centroLondres: null,   //Lo hemos añadido nosotros	
+	  lengendMOLA:null
+
+    }; 
+
+    var sql = {
+      all : "SELECT * FROM bushwick_pluto14v1",
+      rentStab : "SELECT a.* FROM bushwick_pluto14v1 a, bushwick_rent_stabl_merge_centroids b where st_intersects(a.the_geom, b.the_geom)",
+      vacant : "SELECT * FROM bushwick_pluto14v1 WHERE landuse = '11'",	 
+    };
+
+    var mapStyles = {
+      regular : '#bushwick_pluto14v1 {' +
+                      'polygon-fill: hsl(200,40%,90%);' +
+                      'polygon-opacity: 0.75;' +
+                      'line-color: #000;' +
+                      'line-width: 0.2;' +
+                      'line-opacity: 0.5;' +
+                    '}',
+      // red highlight                            
+      red : '#bushwick_pluto14v1 {' +
+                'polygon-fill: hsl(0,100%,30%);' +
+                'polygon-opacity: 0.75;' +
+                'line-color: #000;' +
+                'line-width: 0.2;' +
+                'line-opacity: 0.5;' +
+              '}',
+      // choropleth style for available FAR
+      availFAR : "#bushwick_pluto14v1{" +
+                        "polygon-fill: #FFFFB2;" +
+                        "polygon-opacity: 0.8;" +
+                        "line-color: #000;" +
+                        "line-width: 0.2;" +
+                        "line-opacity: 0.5;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 4] {" +
+                        "polygon-fill: #BD0026;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 3.2] {" +
+                        "polygon-fill: #F03B20;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 2.4000000000000004] {" +
+                        "polygon-fill: #FD8D3C;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 1.6] {" +
+                        "polygon-fill: #FECC5C;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 0.8] {" +
+                        "polygon-fill: #FFFFB2;" +
+                      "}"    
+					  
+    };    
+
+    var initMap = function() {
+      //L.mapbox.accessToken = 'pk.eyJ1IjoicmFsY2FycmlhIiwiYSI6IlMtcUo5dDQifQ.q3GhOqJgpZyBkLFXop2mTQ'; //Esta es la mía
+	  //L.mapbox.accessToken = 'pk.eyJ1IjoiY2hlbnJpY2siLCJhIjoiLVhZMUZZZyJ9.HcNi26J3P-MiOmBKYHIbxw'; //Esta era la del ejemplo
+	  L.mapbox.accessToken = 'pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg'; //La de Clara
+	  
+      el.map = new L.map('map').setView([40.6941, -73.9162], 16);
+      //el.tileLayer = L.mapbox.tileLayer('chenrick.map-3gzk4pem').addTo(el.map); 
+	  el.tileLayer = L.mapbox.tileLayer('clara92r.dwdxcsnz').addTo(el.map); //El de Clara
+	  
+      el.bushwick = new L.LatLng(40.6941, -73.9162);
+      el.rheingold = new L.LatLng(40.700740, -73.934209);
+      el.colony = new L.LatLng(40.695867,-73.928153);
+      el.linden = new L.LatLng(40.692776,-73.919756); 
+      el.centroLondres = new L.LatLng(51.8,-2.2);  //Lo hemos añadido nosotros para poder centrar el mapa en estas coordenadas
+      el.featureGroup = L.featureGroup().addTo(el.map);  
+    //  loadRheingold();  No necesitamos cargar la capa en geoJSON.
+    }            
+
+    var loadCdbData = function() {
+      var cdbURL = "http://bushwick.cartodb.com/api/v2/viz/64ceb582-71e2-11e4-b052-0e018d66dc29/viz.json";
+    
+	cartodb.createLayer(el.map, cdbURL, {
+        cartodb_logo: false,
+        legends: false
+		
+      },
+	  
+      function(layer) {        
+        el.taxLots = layer.getSubLayer(0);        
+
+        el.dobPermitsNB = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_nb",
+          cartocss : '#exp_codedjobs_nb {marker-width: 10; marker-fill: hsl(350,0%,0%); marker-line-color: white; marker-line-width: 0.8;}'         
+        });
+
+        el.dobPermitsA1 = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_a1",
+          cartocss : '#exp_codedjobs_a1 {marker-width: 10; marker-fill: hsl(0,0%,30%); marker-line-color: white; marker-line-width: 0.8;}'
+        });
+
+        el.dobPermitsA2A3 = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_a2a3",
+          cartocss : '#exp_codedjobs_a2a3 {marker-width: 10; marker-fill: hsl(0,0%,30%); marker-line-color: white; marker-line-width: 0.8;}'
+        });        
+
+        console.log('dob sublayers: ', el.dobPermitsA1, el.dobPermitsA2A3 );
+
+        // hide layers on load
+        
+		//el.taxLots.hide(); Menos taxLots, que la vamos a mostrar
+        el.dobPermitsNB.hide();
+        el.dobPermitsA1.hide();
+        el.dobPermitsA2A3.hide();
+
+        el.map.addLayer(layer, false);
+        el.tileLayer.bringToBack();
+
+      });  
+	  
+	 
+	  var myURL = "https://clara92r.cartodb.com/api/v2/viz/306d0aaa-84a1-11e5-a934-0ef7f98ade21/viz.json";
+	  
+	  cartodb.createLayer(el.map, myURL, {
+        cartodb_logo: false,
+        legends:true,
+      },
+      function(layer) {        
+       		
+		
+		el.myLayer0 = layer.getSubLayer(0);
+		el.myLayer1 = layer.getSubLayer(1);
+		el.myLayer2 = layer.getSubLayer(2);
+		el.myLayer3 = layer.getSubLayer(3);
+		el.myLayer4 = layer.getSubLayer(4);
+		el.myLayer5 = layer.getSubLayer(5);
+		//el.myLayer6 = layer.getSubLayer(6); Esta sublayer ya no existe
+
+        
+        // hide layers on load
+        el.myLayer0.hide();
+		el.myLayer1.hide();
+		el.myLayer2.hide();
+		el.myLayer3.hide();
+		el.myLayer4.hide();
+		el.myLayer5.hide();
+		
+        
+        el.map.addLayer(layer, false);
+        el.tileLayer.bringToBack();
+
+      });  
+	
+	  
+    }
+
+    function click(el) {
+      var element = O.Core.getElement(el);
+      var t = O.Trigger();
+
+      function click() {
+        // console.log(el);
+        t.trigger();
+      }
+
+      if (element) element.onclick = click;
+
+      return t;
+    }
+    
+    
+    // trigger a custom event called SlideChange
+    var emitSlideChange = O.Action( function() {
+     $(document).trigger('slideChange', function() {
+      console.log(seq.current())
+     });
+    });
+
+    // listen for the slideChange event to be triggered
+    function listenSlideChange() {
+      $(document).on('slideChange', function() {
+        console.log('listened to slidechange');
+        trackCurrentSlide();
+      });
+    }    
+
+    // fire this each time the user changes a slide
+    function trackCurrentSlide() {
+      slides = $('#slides').children(); // creates an array of slides                 
+      slides.each(function(i){
+        if ($(this).hasClass('selected')) {
+          console.log('index: ', i);
+          checkIndex(i);
+        }
+      }); 
+    }
+
+    // check the index being returned by trackCurrentSlide()
+    function checkIndex(index) {
+      switch(index){
+        case 0: console.log('first slide!'), slideOne(); 
+        break;
+        case 1: console.log('second slide!'), slideTwo();
+        break;
+        case 2: console.log('third slide!'), slideThree();
+        break;
+        case 3: console.log('fourth slide'), slideFour();
+        break;    
+        case 4: console.log('fifth slide'), slideFive();
+        break; 	
+        case 5: console.log('sixth slide'), slideSix();
+        break; 	
+		case 6: console.log('seventh slide'), slideSeven();
+        break; 	
+		case 7: console.log('eighth slide'), slideEight();
+        break; 	
+		case 8: console.log('ninth slide'), slideNine();
+        break; 	
+		case 9: console.log('tenth slide'), slideTen();
+        break; 			
+        default: console.log('out of slide counters');  
+      }
+    }
+
+    function slideOne() {
+      el.taxLots.setSQL(sql.all);
+      el.taxLots.setCartoCSS(mapStyles.availFAR);   
+      el.dobPermitsA1.hide();
+      el.dobPermitsA2A3.hide();	  
+      el.dobPermitsNB.hide();
+      el.myLayer1.hide();	  
+      el.taxLots.hide(); 
+	  el.myLayer0.hide();
+	  el.myLayer5.show();
+	  el.myLayer4.hide();
+    
+    }
+
+    function slideTwo() {      
+     el.taxLots.hide();
+      el.dobPermitsNB.hide();
+      el.myLayer0.show();
+      el.myLayer5.show();
+      el.myLayer1.hide();	  
+    }
+
+    function slideThree() {
+      el.myLayer1.show();
+	  el.myLayer0.hide();
+	  el.myLayer2.hide();
+	  el.myLayer5.show();      
+    }
+
+    function slideFour() {
+      el.myLayer2.show();
+      el.myLayer1.hide();
+	  el.myLayer3.hide();
+	  el.myLayer5.show();
+    }
+	
+	function slideFive() {
+	  el.myLayer3.show();
+      el.myLayer2.hide();
+	  el.myLayer4.hide();
+	  el.myLayer5.show();
+	  
+             
+	}
+
+	function slideSix() {
+	  
+      el.myLayer4.show();
+      el.myLayer3.hide();
+	  el.myLayer5.show();
+       
+	}
+	function slideSeven() {
+	  
+      el.myLayer4.show();
+      el.myLayer3.hide();
+	  el.myLayer5.show();
+       
+	}
+	
+	
+	
+    function initOdyssey(O) {
+      var map = el.map;
+      // O is for Odyssey
+      // var O = O;
+
+	  //Prueba para abrir los popups
+	  
+	  
+	  
+	  
+	  
+      var seq = O.Triggers.Sequential();
+
+      // enable keys to move slides
+      O.Triggers.Keys().left().then(seq.prev, seq)
+      O.Triggers.Keys().right().then(seq.next, seq)
+      // set up triggers for slide arrows 
+      click(document.querySelectorAll('.next')).then(seq.next, seq)
+      click(document.querySelectorAll('.prev')).then(seq.prev, seq)  
+
+      var slides = O.Actions.Slides('slides');
+      el.story = O.Story()
+        .addState(
+          seq.step(0),
+          O.Parallel( 
+            el.map.actions.setZoom(8),
+			el.map.actions.panTo(el.centroLondres),	      	  
+            slides.activate(0),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(1),
+          O.Parallel(
+            el.map.actions.setZoom(8),
+			el.map.actions.panTo(el.centroLondres),	
+            slides.activate(1),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(2),
+          O.Parallel(
+            el.map.actions.setZoom(8),
+			el.map.actions.panTo(el.centroLondres),	            
+            slides.activate(2),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(3),
+          O.Parallel(  
+            el.map.actions.setZoom(8),
+			el.map.actions.panTo(el.centroLondres),			
+            slides.activate(3),
+            emitSlideChange
+          )
+        )   
+		//El siguiente es nuestro
+		.addState(
+          seq.step(4),
+          O.Parallel(              
+			el.map.actions.setZoom(8),
+			el.map.actions.panTo(el.centroLondres),		  
+            slides.activate(4),
+            emitSlideChange
+          )
+        )
+		//El siguiente es nuestro
+		.addState(
+          seq.step(5),
+          O.Parallel(              
+			el.map.actions.setZoom(8),
+			el.map.actions.panTo(el.centroLondres),		  
+            slides.activate(5),
+            emitSlideChange
+          )
+        )
+		.addState(
+          seq.step(6),
+          O.Parallel(              
+			el.map.actions.setZoom(8),
+			el.map.actions.panTo(el.centroLondres),		  
+            slides.activate(6),
+            emitSlideChange
+          )
+        )
+		
+		;
+
+      el.story.go(0);
+    }
+
+    function init() {
+      initMap();
+      loadCdbData();
+      initOdyssey(O);
+      listenSlideChange();            
+    } 
+
+    return {
+      init : init,
+      el : el
+    }
+
+  })(window, document, jQuery, O);
+
+  window.addEventListener('DOMContentLoaded', function(){
+    app.odysseyTest.init();
+  });
+ 
+
+  </script>
+   
+               
+           
+    
+</body>
+</html>

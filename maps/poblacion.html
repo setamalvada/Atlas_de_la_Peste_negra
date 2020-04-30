@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html>
+<head>  
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas de la Peste Negra</title>
+  <meta name="description" content="An introduction to the Bushwick Community Map">
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+  <link rel="stylesheet" href="http://cartodb.github.io/odyssey.js/sandbox/css/slides.css">  
+   <link rel="stylesheet" href="cartodb.css">   
+  <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.4/mapbox.css' rel='stylesheet'/>  
+   <link rel="icon" type="image/png" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+  <style>
+    .ui{
+  position: absolute;
+  background-color: hsla(0, 0%, 100%, 1);  
+  border: 2px solid hsl(0, 0%, 100%);
+  border-radius: 7px;  
+  height: 170px;
+  width: 250px;
+  font-family: Helvetica, sans-serif;
+}
+  .ui.legend {
+  position: absolute;
+  z-index: 200;
+  right: 40px;
+  bottom: 20px;
+  width: 240px;
+  padding: 12px;   
+}
+
+.ui.legend h4 {
+  text-align: left;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.legend .legend-scale ul {
+  margin: 0;
+  margin-bottom: 5px;
+  padding: 0;
+  float: left;
+  list-style: none;
+}
+
+.legend .legend-scale ul li {
+  font-size: 13px;
+  list-style: none;
+  margin-left: 0;
+  line-height: 18px;
+  margin-bottom: 0px;
+}
+
+.legend ul.legend-labels li span {
+  display: block;
+  float: left;
+  height: 16px;
+  width: 30px;
+  margin-right: 5px;
+  margin-left: 1px;
+  border: 0.5px solid #000000;
+
+  opacity: 1;
+}
+
+.legend2 ul.legend-labels li span {
+  display: block;
+  float: left;
+  height: 16px;
+  width: 30px;
+  margin-right: 5px;
+  margin-left: 1px;
+  border: 0.5px solid #000000;
+   border-radius: 4px;
+  opacity: 1;
+}
+
+.legend .legend-source {
+  font-size: 12px;
+  color: #999;
+  clear: both;
+}
+
+.ui.legend a {
+  color: #777;
+  width: 100%;
+  margin: inherit;
+  padding: 0 2px;
+  display: inline;
+  background-color: #fff;
+  box-shadow: 0;
+  border: 0;
+  border-radius: 0;
+  text-decoration: underline;  
+}
+
+.ui.legend a:hover {
+  color:#FFF;
+  background-color: #777;
+}
+
+    slides_container {
+      text-align: left;
+      margin: 0; padding: 0;
+      font-family: Georgia;
+      background: #EEE;
+    }
+    h2 {
+      font-weight: normal;
+    }    
+    #slides_container .slide {
+      max-height: 600px;
+    }    
+  </style>
+</head>
+<body>
+    <div id="map" style="width: 100%; height: 100%"></div>
+	<!-- empty div to render the legends template in -->
+  <div id="ui-legend" class="ui legend">
+    <h4>Variación relativa de densidad de población(%)</h4>
+    <div class="legend-scale">
+      <ul class="legend-labels">
+        
+        <li><span style="background:#053061;"></span>-21 a -10.51</li>
+        
+        <li><span style="background:#4393c3;"></span>-10.50 a -0.42</li>
+        
+        <li><span style="background:#e8d0c8;"></span>-0.41 a 9.66</li>
+        
+        <li><span style="background:#f4a582;"></span>9.67 a 19.75</li>
+        
+        <li><span style="background:#d6604d;"></span>19.76 a 29.83</li>
+		<li><span style="background:#b2182b;"></span>29.84 a 39.92</li>
+		<li><span style="background:#67001f;"></span>39.93 a 50</li>
+        
+      </ul>
+	 <ul class="legend-labels">
+	 <!--<h4>Población urbana</</h4>
+        <li><a href="http://es.tinypic.com?ref=cumj7" target="_blank"><img src="http://i68.tinypic.com/cumj7.jpg" border="0" alt="Image and video hosting by TinyPic"></a
+        -->
+        </li>
+              
+      </ul>
+    </div>
+	
+ 
+  </div>
+    <div id="slides_container" style="display:block;">
+    <div id="dots"></div>
+    <div id="slides">
+      <div class="slide">
+        <h1 id="rheingold">Evolución de la población durante la Baja Edad Media</h1>
+        <p>
+		La evolución demográfica medieval europea se caracterizó por un crecimiento continuado desde su comienzo hasta el siglo XIV, en el cual la población experimentó una fuerte caída.
+        </p>
+        <p>
+          Cabe destacar también el hecho  del nacimiento o renacimiento de los grandes núcleos urbanos, abandonados desde el fin del Imperio Romano. Las ciudades favorecieron el intercambio comercial y, en consecuencia, el aumento de la población. Desgraciadamente, el hacinamiento de personas en estos núcleos hizo que la Peste Negra causase estragos en la población urbana. 
+        </p>
+       <p>
+	   
+	   </p>
+        <p>
+		</p>
+        </div>
+      <div class="slide">
+        <h1 id="far">Años 1250 a 1300</h1>
+        <p>
+          Desde el comienzo del siglo 1000 D.C la población europea experimentó un gran crecimiento, debido  en parte a la mayor estabilidad política y unión, producto de las Cruzadas, el descenso de las guerras feudales al aumentar el poder monárquico y el llamado período cálido medieval mejorando las cosechas, además de la nueva apertura comercial con la reconquista de España y Tierra Santa.
+        </p>
+        <p>
+		Entre los años 1250 a 1300 la población europea se mantuvo relativamente estable. La Península Ibérica, en tiempos de la Reconquista, es la única que sufrió un descenso de población. 
+		</p>
+		<p>
+		</p>
+		
+        </div>
+      <div class="slide">
+        <h1>Años 1300 a 1350</h1>
+        <p>
+		En estos años Europa estaba en plena crisis bajomedieval. Una bajada generalizada de temperaturas arruinó las cosechas. La Gran Hambruna de 1315-1317 marcó la primera parte de este periodo.  La Guerra de los Cien Años hizo caer en picado la población inglesa y francesa. Por último, la Peste Negra hizo desaparecer a un tercio de la población europea.
+        </p>
+        <p>
+		</p>  
+        <p>	
+		
+		</p>
+      </div>
+      <div class="slide">
+        <h1>Años 1350 a 1400</h1>
+        <p>
+		Por este tiempo los brotes de la epidemia se hicieron cada vez menos agresivos, la crisis fue remitiendo poco a poco y, a su vez la población volvió a crecer, aunque más lentamente que en el siglo pasado. Francia siguió en guerra contra Inglaterra hasta 1453, por eso su población siguió descendiendo.
+		</p> 
+         <p>
+		</p>  		
+      </div>
+      <div class="slide">
+        <h1 id="colony"> Años 1400 a 1450 </h1>
+        <p>
+		En este periodo la población siguió creciendo de manera progresiva y desigual en todos los países. El crecimiento de la población provocó una mayor demanda de alimentos y productos, por lo que la economía también mejoró, y por tanto, la velocidad del crecimiento demográfico se multiplicó posteriormente.
+		</p>
+		<p>
+		</p>
+        </div>
+      <div class="slide">
+        <h1>Fuentes</h1>
+        <p>
+		Datos del Mapa 
+		<br>
+		• URLANIS Boris,  Rostnaseleniya v Evrope [Population growth in Europe] (in Russian). Moscow, 1941
+		<br>
+		• SUÁREZ FERNÁNDEZ, Luis, Historia social y económica de la Edad Media europea. ESPASA CALPE, 1984
+		<br>
+		Bibliografía
+		<br>
+		• <A HREF="http://www.profesorenlinea.cl/universalhistoria/Ciudades_y_comercio.htm">Ciudades y comercio</A>
+		
+		<br>
+		• <A HREF="http://www.tulane.edu/~august/H303/handouts/Population.htm">Medias de población</A>
+		
+		
+		
+	   </p>
+        </div>
+      
+  </div> 
+  
+    <ul id="navButtons">
+      <li><a class="prev"></a></li>
+      <li><a class="next"></a></li>
+    </ul>
+  </div>
+<!--   <div id="credits">
+    <span class="title" id="title">Bushwick Community Map Introduction</span>
+    <span class="author"><strong id="author">By @clhenrick using</strong> <a href="http://cartodb.github.io/odyssey.js/">Odyssey.js</a><span></span></span>
+  </div>  -->
+
+  <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
+  <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.4/mapbox.standalone.js'></script>
+  <script src="http://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
+  <script>
+  
+
+  var app = app || {};
+
+  app.odysseyTest = (function(w,d,$,O) {
+
+    var el = {
+      map : null,
+      tileLayer : null,
+      story : null,
+      bushwick : null,
+      rheingold : null,
+      colony : null,
+      linden : null,
+      featureGroup : null,
+      rheingoldJson : null,
+      taxLots: null,
+      dobPermitsNB : null,
+      dobPermitsA1: null,
+      dobPermitsA2A3: null,
+      myLayer0: null,	   //Lo hemos añadido nosotros
+	  myLayer1: null,	   //Lo hemos añadido nosotros
+	  myLayer2: null,	   //Lo hemos añadido nosotros
+	  myLayer3: null,	   //Lo hemos añadido nosotros
+	  myLayer4: null,	   //Lo hemos añadido nosotros
+	  centroLondres: null,   //Lo hemos añadido nosotros	
+	  
+    }; 
+
+    var sql = {
+      all : "SELECT * FROM bushwick_pluto14v1",
+      rentStab : "SELECT a.* FROM bushwick_pluto14v1 a, bushwick_rent_stabl_merge_centroids b where st_intersects(a.the_geom, b.the_geom)",
+      vacant : "SELECT * FROM bushwick_pluto14v1 WHERE landuse = '11'",	 
+    };
+
+    var mapStyles = {
+      regular : '#bushwick_pluto14v1 {' +
+                      'polygon-fill: hsl(200,40%,90%);' +
+                      'polygon-opacity: 0.75;' +
+                      'line-color: #000;' +
+                      'line-width: 0.2;' +
+                      'line-opacity: 0.5;' +
+                    '}',
+      // red highlight                            
+      red : '#bushwick_pluto14v1 {' +
+                'polygon-fill: hsl(0,100%,30%);' +
+                'polygon-opacity: 0.75;' +
+                'line-color: #000;' +
+                'line-width: 0.2;' +
+                'line-opacity: 0.5;' +
+              '}',
+      // choropleth style for available FAR
+      availFAR : "#bushwick_pluto14v1{" +
+                        "polygon-fill: #FFFFB2;" +
+                        "polygon-opacity: 0.8;" +
+                        "line-color: #000;" +
+                        "line-width: 0.2;" +
+                        "line-opacity: 0.5;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 4] {" +
+                        "polygon-fill: #BD0026;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 3.2] {" +
+                        "polygon-fill: #F03B20;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 2.4000000000000004] {" +
+                        "polygon-fill: #FD8D3C;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 1.6] {" +
+                        "polygon-fill: #FECC5C;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 0.8] {" +
+                        "polygon-fill: #FFFFB2;" +
+                      "}"    
+					  
+    };    
+
+    var initMap = function() {
+      //L.mapbox.accessToken = 'pk.eyJ1IjoicmFsY2FycmlhIiwiYSI6IlMtcUo5dDQifQ.q3GhOqJgpZyBkLFXop2mTQ'; //Esta es la mía
+	  //L.mapbox.accessToken = 'pk.eyJ1IjoiY2hlbnJpY2siLCJhIjoiLVhZMUZZZyJ9.HcNi26J3P-MiOmBKYHIbxw'; //Esta era la del ejemplo
+	  L.mapbox.accessToken = 'pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg'; //La de Clara
+	  
+      el.map = new L.map('map').setView([40.6941, -73.9162], 16);
+      //el.tileLayer = L.mapbox.tileLayer('chenrick.map-3gzk4pem').addTo(el.map); 
+	  el.tileLayer = L.mapbox.tileLayer('clara92r.dwdxcsnz').addTo(el.map); //El de Clara
+	  
+      el.bushwick = new L.LatLng(40.6941, -73.9162);
+      el.rheingold = new L.LatLng(40.700740, -73.934209);
+      el.colony = new L.LatLng(40.695867,-73.928153);
+      el.linden = new L.LatLng(40.692776,-73.919756); 
+      el.centroLondres = new L.LatLng(52.0795,1.6699);  //Lo hemos añadido nosotros para poder centrar el mapa en estas coordenadas
+	  el.centroLondres2 = new L.LatLng(48.2393, 6.2402);  //Lo hemos añadido nosotros para poder centrar el mapa en estas coordenadas
+      el.featureGroup = L.featureGroup().addTo(el.map);  
+    //  loadRheingold();  No necesitamos cargar la capa en geoJSON.
+    }            
+
+    var loadCdbData = function() {
+      var cdbURL = "http://bushwick.cartodb.com/api/v2/viz/64ceb582-71e2-11e4-b052-0e018d66dc29/viz.json";
+    
+	cartodb.createLayer(el.map, cdbURL, {
+        cartodb_logo: false,
+        legends: false
+      },
+	  
+      function(layer) {        
+        el.taxLots = layer.getSubLayer(0);        
+
+        el.dobPermitsNB = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_nb",
+          cartocss : '#exp_codedjobs_nb {marker-width: 10; marker-fill: hsl(350,0%,0%); marker-line-color: white; marker-line-width: 0.8;}'         
+        });
+
+        el.dobPermitsA1 = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_a1",
+          cartocss : '#exp_codedjobs_a1 {marker-width: 10; marker-fill: hsl(0,0%,30%); marker-line-color: white; marker-line-width: 0.8;}'
+        });
+
+        el.dobPermitsA2A3 = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_a2a3",
+          cartocss : '#exp_codedjobs_a2a3 {marker-width: 10; marker-fill: hsl(0,0%,30%); marker-line-color: white; marker-line-width: 0.8;}'
+        });        
+
+        console.log('dob sublayers: ', el.dobPermitsA1, el.dobPermitsA2A3 );
+
+        // hide layers on load
+        
+		//el.taxLots.hide(); Menos taxLots, que la vamos a mostrar
+        el.dobPermitsNB.hide();
+        el.dobPermitsA1.hide();
+        el.dobPermitsA2A3.hide();
+
+        el.map.addLayer(layer, false);
+        el.tileLayer.bringToBack();
+
+      });  
+	  
+	 
+	  var myURL = "https://clara92r.cartodb.com/api/v2/viz/c308a05a-8234-11e5-bee5-0ef24382571b/viz.json";
+	  
+	  cartodb.createLayer(el.map, myURL, {
+        cartodb_logo: false,
+        legends:false,
+      },
+      function(layer) {        
+       		
+		
+		el.myLayer0 = layer.getSubLayer(0);
+		el.myLayer1 = layer.getSubLayer(1);
+		el.myLayer2 = layer.getSubLayer(2);
+		el.myLayer3 = layer.getSubLayer(3);
+		el.myLayer4 = layer.getSubLayer(4);
+		//el.myLayer5 = layer.getSubLayer(5);
+		//el.myLayer6 = layer.getSubLayer(6); Esta sublayer ya no existe
+
+        
+        // hide layers on load
+        el.myLayer0.hide();
+		el.myLayer1.hide();
+		el.myLayer2.hide();
+		el.myLayer3.hide();
+		el.myLayer4.hide();
+		//el.myLayer5.hide();
+		
+        
+        el.map.addLayer(layer, false);
+        el.tileLayer.bringToBack();
+
+      });  
+	
+	  
+    }
+
+    function click(el) {
+      var element = O.Core.getElement(el);
+      var t = O.Trigger();
+
+      function click() {
+        // console.log(el);
+        t.trigger();
+      }
+
+      if (element) element.onclick = click;
+
+      return t;
+    }
+    
+    
+    // trigger a custom event called SlideChange
+    var emitSlideChange = O.Action( function() {
+     $(document).trigger('slideChange', function() {
+      console.log(seq.current())
+     });
+    });
+
+    // listen for the slideChange event to be triggered
+    function listenSlideChange() {
+      $(document).on('slideChange', function() {
+        console.log('listened to slidechange');
+        trackCurrentSlide();
+      });
+    }    
+
+    // fire this each time the user changes a slide
+    function trackCurrentSlide() {
+      slides = $('#slides').children(); // creates an array of slides                 
+      slides.each(function(i){
+        if ($(this).hasClass('selected')) {
+          console.log('index: ', i);
+          checkIndex(i);
+        }
+      }); 
+    }
+
+    // check the index being returned by trackCurrentSlide()
+    function checkIndex(index) {
+      switch(index){
+        case 0: console.log('first slide!'), slideOne(); 
+        break;
+        case 1: console.log('second slide!'), slideTwo();
+        break;
+        case 2: console.log('third slide!'), slideThree();
+        break;
+        case 3: console.log('fourth slide'), slideFour();
+        break;    
+        case 4: console.log('fifth slide'), slideFive();
+        break; 	
+        case 5: console.log('sixth slide'), slideSix();
+        break; 	
+		case 6: console.log('seventh slide'), slideSeven();
+        break; 	
+		case 7: console.log('eighth slide'), slideEight();
+        break; 	
+		case 8: console.log('ninth slide'), slideNine();
+        break; 	
+		case 9: console.log('tenth slide'), slideTen();
+        break; 			
+        default: console.log('out of slide counters');  
+      }
+    }
+
+    function slideOne() {
+      el.taxLots.setSQL(sql.all);
+      el.taxLots.setCartoCSS(mapStyles.availFAR);   
+      el.dobPermitsA1.hide();
+      el.dobPermitsA2A3.hide();	  
+      el.dobPermitsNB.hide();
+      el.myLayer1.hide();	  
+      el.taxLots.hide(); 
+	  el.myLayer3.hide();
+	  //el.myLayer5.show();
+	  //el.myLayer4.hide();
+    
+    }
+
+    function slideTwo() {      
+     el.taxLots.hide();
+      el.dobPermitsNB.hide();
+      el.myLayer3.show();
+      el.myLayer2.hide();
+      el.myLayer4.hide();	  
+    }
+
+    function slideThree() {
+      el.myLayer4.show();
+	  el.myLayer2.show();
+	  el.myLayer3.hide();
+	  el.myLayer1.hide();
+	  //el.myLayer5.show();      
+    }
+
+    function slideFour() {
+      el.myLayer4.show();
+      el.myLayer1.show();
+	  el.myLayer0.hide();
+	  el.myLayer2.hide();
+    }
+	
+	function slideFive() {
+	  el.myLayer0.show();
+      el.myLayer1.hide();
+	  el.myLayer4.hide();
+	  //el.myLayer5.show();
+	  
+      
+       
+	}
+
+	function slideSix() {
+	  
+      //el.myLayer4.show();
+      //el.myLayer3.hide();
+	  el.myLayer0.hide();
+       
+	}
+	
+	
+	
+    function initOdyssey(O) {
+      var map = el.map;
+      // O is for Odyssey
+      // var O = O;
+
+      var seq = O.Triggers.Sequential();
+
+      // enable keys to move slides
+      O.Triggers.Keys().left().then(seq.prev, seq)
+      O.Triggers.Keys().right().then(seq.next, seq)
+      // set up triggers for slide arrows 
+      click(document.querySelectorAll('.next')).then(seq.next, seq)
+      click(document.querySelectorAll('.prev')).then(seq.prev, seq)  
+
+      var slides = O.Actions.Slides('slides');
+      el.story = O.Story()
+        .addState(
+          seq.step(0),
+          O.Parallel( 
+            el.map.actions.setZoom(4),
+			el.map.actions.panTo(el.centroLondres),	      	  
+            slides.activate(0),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(1),
+          O.Parallel(
+            el.map.actions.setZoom(4),
+			el.map.actions.panTo(el.centroLondres),	
+            slides.activate(1),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(2),
+          O.Parallel(
+            el.map.actions.setZoom(5),
+			el.map.actions.panTo(el.centroLondres2),	            
+            slides.activate(2),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(3),
+          O.Parallel(  
+            el.map.actions.setZoom(5),
+			el.map.actions.panTo(el.centroLondres2),			
+            slides.activate(3),
+            emitSlideChange
+          )
+        )   
+		//El siguiente es nuestro
+		.addState(
+          seq.step(4),
+          O.Parallel(              
+			el.map.actions.setZoom(4),
+			el.map.actions.panTo(el.centroLondres),		  
+            slides.activate(4),
+            emitSlideChange
+          )
+        )
+		//El siguiente es nuestro
+		.addState(
+          seq.step(5),
+          O.Parallel(              
+			el.map.actions.setZoom(4),
+			el.map.actions.panTo(el.centroLondres),		  
+            slides.activate(5),
+            emitSlideChange
+          )
+        )
+		
+		;
+
+      el.story.go(0);
+    }
+
+    function init() {
+      initMap();
+      loadCdbData();
+      initOdyssey(O);
+      listenSlideChange();            
+    } 
+
+    return {
+      init : init,
+      el : el
+    }
+
+  })(window, document, jQuery, O);
+
+  window.addEventListener('DOMContentLoaded', function(){
+    app.odysseyTest.init();
+  });
+ 
+
+  </script>
+   
+               
+           
+    
+</body>
+</html>

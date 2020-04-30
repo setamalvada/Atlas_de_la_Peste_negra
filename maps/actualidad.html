@@ -1,0 +1,332 @@
+<!doctype><html><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Odyssey.js Slides</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/x-icon" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+  <link rel="icon" type="image/png" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+
+  <link rel="stylesheet" href="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/themes/css/cartodb.css">
+  <link rel="stylesheet" href="http://cartodb.github.io/odyssey.js/sandbox/css/slides.css">
+  <script src="http://cartodb.github.io/odyssey.js/vendor/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+  <div id="map" style="width: 100%; height: 100%;"></div>
+
+  <div id="slides_container" style="display:block;">
+    <div id="dots"></div>
+
+    <div id="slides"></div>
+
+    <ul id="navButtons">
+      <li><a class="prev"></a></li>
+      <li><a class="next"></a></li>
+    </ul>
+  </div>
+
+  <div id="credits">
+    <span class="title" id="title">Title</span>
+    <span class="author"><strong id="author">By Name using</strong> <a href="http://cartodb.github.io/odyssey.js/">Odyssey.js</a><span>
+  </span></span></div>
+
+  <script src="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
+  <script src="http://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
+
+  <script>
+    var resizePID;
+
+    function clearResize() {
+      clearTimeout(resizePID);
+      resizePID = setTimeout(function() { adjustSlides(); }, 100);
+    }
+
+    if (!window.addEventListener) {
+      window.attachEvent("resize", function load(event) {
+        clearResize();
+      });
+    } else {
+      window.addEventListener("resize", function load(event) {
+        clearResize();
+      });
+    }
+
+    function adjustSlides() {
+      var container = document.getElementById("slides_container"),
+          slide = document.querySelectorAll('.selected_slide')[0];
+
+      if (slide) {
+        if (slide.offsetHeight+169+40+80 >= window.innerHeight) {
+          container.style.bottom = "80px";
+
+          var h = container.offsetHeight;
+
+          slide.style.height = h-169+"px";
+          slide.classList.add("scrolled");
+        } else {
+          container.style.bottom = "auto";
+          container.style.minHeight = "0";
+
+          slide.style.height = "auto";
+          slide.classList.remove("scrolled");
+        }
+      }
+    }
+
+    var resizeAction = O.Action(function() {
+      function imageLoaded() {
+        counter--;
+
+        if (counter === 0) {
+          adjustSlides();
+        }
+      }
+      var images = $('img');
+      var counter = images.length;
+
+      images.each(function() {
+        if (this.complete) {
+          imageLoaded.call( this );
+        } else {
+          $(this).one('load', imageLoaded);
+        }
+      });
+    });
+
+    function click(el) {
+      var element = O.Core.getElement(el);
+      var t = O.Trigger();
+
+      // TODO: clean properly
+      function click() {
+        t.trigger();
+      }
+
+      if (element) element.onclick = click;
+
+      return t;
+    }
+
+    O.Template({
+      init: function() {
+        var seq = O.Triggers.Sequential();
+
+        var baseurl = this.baseurl = 'http://a.tiles.mapbox.com/v4/clara92r.dwdxcsnz/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg';
+        var map = this.map = L.map('map').setView([5.1785, -35.1563], 4);
+        var basemap = this.basemap = L.tileLayer(baseurl, {
+          attribution: 'data OSM - map CartoDB'
+        }).addTo(map);
+
+        // enanle keys to move
+        O.Keys().on('map').left().then(seq.prev, seq)
+        O.Keys().on('map').right().then(seq.next, seq)
+
+        click(document.querySelectorAll('.next')).then(seq.next, seq)
+        click(document.querySelectorAll('.prev')).then(seq.prev, seq)
+
+        var slides = O.Actions.Slides('slides');
+        var story = O.Story()
+
+        this.story = story;
+        this.seq = seq;
+        this.slides = slides;
+        this.progress = O.UI.DotProgress('dots').count(0);
+      },
+
+      update: function(actions) {
+        var self = this;
+
+        if (!actions.length) return;
+
+        this.story.clear();
+
+        if (this.baseurl && (this.baseurl !== actions.global.baseurl)) {
+          this.baseurl = actions.global.baseurl || 'http://a.tiles.mapbox.com/v4/clara92r.dwdxcsnz/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg';
+
+          this.basemap.setUrl(this.baseurl);
+        }
+
+        if (this.cartoDBLayer && ("http://"+self.cartoDBLayer.options.user_name+".cartodb.com/api/v2/viz/"+self.cartoDBLayer.options.layer_definition.stat_tag+"/viz.json" !== actions.global.vizjson)) {
+          this.map.removeLayer(this.cartoDBLayer);
+
+          this.cartoDBLayer = null;
+          this.created = false;
+        }
+
+        if (actions.global.vizjson && !this.cartoDBLayer) {
+          if (!this.created) { // sendCode debounce < vis loader
+            cdb.vis.Loader.get(actions.global.vizjson, function(vizjson) {
+              self.map.fitBounds(vizjson.bounds);
+
+              cartodb.createLayer(self.map, vizjson)
+                .done(function(layer) {
+                  self.cartoDBLayer = layer;
+
+                  var sublayer = layer.getSubLayer(0),
+                      layer_name = layer.layers[0].options.layer_name,
+                      filter = actions.global.cartodb_filter ? " WHERE "+actions.global.cartodb_filter : "";
+
+                  sublayer.setSQL("SELECT * FROM "+layer_name+filter)
+
+                  self.map.addLayer(layer);
+
+                  self._resetActions(actions);
+                }).on('error', function(err) {
+                  console.log("some error occurred: " + err);
+                });
+            });
+
+            this.created = true;
+          }
+
+          return;
+        }
+
+        this._resetActions(actions);
+      },
+
+      _resetActions: function(actions) {
+        // update footer title and author
+        var title_ = actions.global.title === undefined ? '' : actions.global.title,
+            author_ = actions.global.author === undefined ? 'Using' : 'By '+actions.global.author+' using';
+
+        document.getElementById('title').innerHTML = title_;
+        document.getElementById('author').innerHTML = author_;
+        document.title = title_ + " | " + author_ +' Odyssey.js';
+
+        var sl = actions;
+
+        document.getElementById('slides').innerHTML = ''
+        this.progress.count(sl.length);
+
+        // create new story
+        for(var i = 0; i < sl.length; ++i) {
+          var slide = sl[i];
+          var tmpl = "<div class='slide' style='diplay:none'>";
+
+          tmpl += slide.html();
+          tmpl += "</div>";
+          document.getElementById('slides').innerHTML += tmpl;
+
+          this.progress.step(i).then(this.seq.step(i), this.seq)
+
+          var actions = O.Parallel(
+            this.slides.activate(i),
+            slide(this),
+            this.progress.activate(i),
+            resizeAction
+          );
+
+          actions.on("finish.app", function() {
+            adjustSlides();
+          });
+
+          this.story.addState(
+            this.seq.step(i),
+            actions
+          )
+        }
+
+        this.story.go(this.seq.current());
+      },
+
+      changeSlide: function(n) {
+        this.seq.current(n);
+      }
+    });
+  </script>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-20934186-21', 'cartodb.github.io');
+    ga('send', 'pageview');
+  </script>
+
+  <script type="text/javascript" src="http://fast.fonts.net/jsapi/3af16084-ba56-49ca-b37d-0b49b59e1927.js"></script>
+
+<script id="md_template" type="text/template">```
+-title: "Atlas de la Peste Negra"
+-author: "Clara Rodríguez Fernández"
+-vizjson:"https://clara92r.cartodb.com/api/v2/viz/f000d204-9840-11e5-b2ed-0ef7f98ade21/viz.json"
+-baseurl: "http://a.tiles.mapbox.com/v4/clara92r.dwdxcsnz/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg"
+```
+
+#La Peste en la actualidad
+```
+- center: [5.1785, -35.1563]
+- zoom: 3
+```
+A pesar de haber sido la epidemia más mortífera de esta enfermedad, la Peste Negra volvió a reaparecer en brotes de menor intensidad a lo largo de los siglos. La epidemia de peste de 1649 en Sevilla, la Gran Peste de Londres (1665), la Gran peste de Viena (1679) y la plaga Italiana (1629) son ejemplos de estos rebrotes en siglos posteriores.
+
+Tras el descubrimiento de la bacteria que causaba la enfermedad en el siglo XIX se pudo encontrar un tratamiento antibiótico efectivo contra la enfermedad.  
+![bacteria](http://images.fineartamerica.com/images-medium-large/yersinia-pestis-plague-bacteria-pasieka.jpg)
+Aunque es una patología tratable en la actualidad, si no se inicia el tratamiento rápidamente, en algunos casos la ayuda llegará demasiado tarde.
+
+#¿Dónde se encuentra la peste ahora?
+```
+- center: [5.1785, -35.1563]
+- zoom: 3
+```
+La peste es endémica en muchos países de África, la antigua Unión Soviética, América y Asia. La distribución de la peste coincide con la distribución geográfica de los roedores a los que infecta, que se encuentran en todos los continentes excepto Australia, en un ancho cinturón que abarca climas tropicales, subtropicales y templados. 
+
+Ha habido epidemias de peste en África, Asia y América del Sur, pero desde el decenio de 1990, la mayoría de los casos en seres humanos se han concentrado en África. Los tres países más endémicos son Madagascar, la República Democrática del Congo y el Perú.
+![ratas](https://indagadores.files.wordpress.com/2013/12/peste-bubc3b3nica-madagascar-indagadores-wp.jpg)
+#Asia
+```
+- center: [36.3682, 86.6162]
+- zoom: 5
+```
+Desde 1954 hasta  1980 la mayoría de casos eran reportados desde este continente. A partir de 1980 a 1997 se han registrado casos desde siete países diferentes: China, India, Kazajistán, Laos, Mongolia, Myanmar, y Vietnam. 
+
+En los últimos veinte años se han registrado unos cincuenta casos en el norte de India, Mongolia y el centro de China. 
+
+#Norte de África
+```
+- center: [35.5501, -6.1963]
+- zoom: 5
+```
+Desde el principio de 1980 ha habido una tendencia al aumento en número de casos en el continente, aunque esta tendencia se dio más por la zona centro y sur.
+![peste áfrica](http://eldiario.com.uy/wp-content/uploads/2015/02/images-13.jpg)
+Cabe destacar un caso aislado en Argelia a mitad de 2003.
+
+#Centroáfrica y Sudáfrica
+```
+- center: [-10.8549, 22.9834]
+- zoom: 5
+```
+Desde 1980 a 1997 se han registrado casos de la enfermedad en trece países: Angola, Botswana, República Democrática del Congo, Kenia, Libia, Madagascar, Malawi, Mozambique, Sudáfrica, Uganda, Tanzania, Zambia y Zimbabue.
+
+En la actualidad, los países más castigados por la Peste son la República Democrática del Congo y Madagascar.
+![peste Madagascar](http://www.lagranepoca.com/sites/default/files/imagecache/nodo_fotos/456149624.jpg)
+#Norteamérica
+```
+- center: [40.2124, -112.6758]
+- zoom: 5
+```
+La peste es poco común en los Estados Unidos, pero se ha sabido de su presencia en partes de California, Arizona, Colorado y Nuevo México en los últimos veinte años.
+
+Actualmente Estados Unidos ha padecido un [número inusualmente alto de casos humanos de peste](http://www.mirror.co.uk/news/world-news/black-death-now-top-list-6644988) desde abril de 2015.
+
+#Sudamérica
+```
+- center: [-6.4245, -83.1885]
+- zoom: 5
+```
+Entre 1980 y 1997 se han registrado casos en Bolivia, Brasil, Ecuador y Perú. En ese periodo de tiempo se registraron unos 3000 casos y 180 muertes.
+
+Desde el año 2000 se han registrado casos únicamente en Ecuador y Perú.
+#Fuentes
+```
+- center: [5.1785, -35.1563]
+- zoom: 3
+```
+-[Página oficial de la Organización Mundial de la Salud(en español)](http://www.who.int/topics/plague/es/)
+
+-[World Health Oroganization](http://www.who.int/topics/plague/en/)
+
+</script></body></html>

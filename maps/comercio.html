@@ -1,0 +1,506 @@
+<!doctype><html><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Odyssey.js Slides</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/x-icon" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+  <link rel="icon" type="image/png" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+
+  <link rel="stylesheet" href="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/themes/css/cartodb.css">
+  <link rel="stylesheet" href="http://cartodb.github.io/odyssey.js/sandbox/css/slides.css">
+  <script src="http://cartodb.github.io/odyssey.js/vendor/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+  <div id="map" style="width: 100%; height: 100%;"></div>
+
+  <div id="slides_container" style="display:block;">
+    <div id="dots"></div>
+
+    <div id="slides"></div>
+
+    <ul id="navButtons">
+      <li><a class="prev"></a></li>
+      <li><a class="next"></a></li>
+    </ul>
+  </div>
+
+  <div id="credits">
+    <span class="title" id="title">Title</span>
+    <span class="author"><strong id="author">By Name using</strong> <a href="http://cartodb.github.io/odyssey.js/">Odyssey.js</a><span>
+  </span></span></div>
+
+  <script src="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
+  <script src="http://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
+
+  <script>
+    var resizePID;
+
+    function clearResize() {
+      clearTimeout(resizePID);
+      resizePID = setTimeout(function() { adjustSlides(); }, 100);
+    }
+
+    if (!window.addEventListener) {
+      window.attachEvent("resize", function load(event) {
+        clearResize();
+      });
+    } else {
+      window.addEventListener("resize", function load(event) {
+        clearResize();
+      });
+    }
+
+    function adjustSlides() {
+      var container = document.getElementById("slides_container"),
+          slide = document.querySelectorAll('.selected_slide')[0];
+
+      if (slide) {
+        if (slide.offsetHeight+169+40+80 >= window.innerHeight) {
+          container.style.bottom = "80px";
+
+          var h = container.offsetHeight;
+
+          slide.style.height = h-169+"px";
+          slide.classList.add("scrolled");
+        } else {
+          container.style.bottom = "auto";
+          container.style.minHeight = "0";
+
+          slide.style.height = "auto";
+          slide.classList.remove("scrolled");
+        }
+      }
+    }
+
+    var resizeAction = O.Action(function() {
+      function imageLoaded() {
+        counter--;
+
+        if (counter === 0) {
+          adjustSlides();
+        }
+      }
+      var images = $('img');
+      var counter = images.length;
+
+      images.each(function() {
+        if (this.complete) {
+          imageLoaded.call( this );
+        } else {
+          $(this).one('load', imageLoaded);
+        }
+      });
+    });
+
+    function click(el) {
+      var element = O.Core.getElement(el);
+      var t = O.Trigger();
+
+      // TODO: clean properly
+      function click() {
+        t.trigger();
+      }
+
+      if (element) element.onclick = click;
+
+      return t;
+    }
+
+    O.Template({
+      init: function() {
+        var seq = O.Triggers.Sequential();
+
+        var baseurl = this.baseurl = 'http://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}';
+        var map = this.map = L.map('map').setView([0, 0.0], 4);
+        var basemap = this.basemap = L.tileLayer(baseurl, {
+          attribution: 'data OSM - map CartoDB'
+        }).addTo(map);
+
+        // enanle keys to move
+        O.Keys().on('map').left().then(seq.prev, seq)
+        O.Keys().on('map').right().then(seq.next, seq)
+
+        click(document.querySelectorAll('.next')).then(seq.next, seq)
+        click(document.querySelectorAll('.prev')).then(seq.prev, seq)
+
+        var slides = O.Actions.Slides('slides');
+        var story = O.Story()
+
+        this.story = story;
+        this.seq = seq;
+        this.slides = slides;
+        this.progress = O.UI.DotProgress('dots').count(0);
+      },
+
+      update: function(actions) {
+        var self = this;
+
+        if (!actions.length) return;
+
+        this.story.clear();
+
+        if (this.baseurl && (this.baseurl !== actions.global.baseurl)) {
+          this.baseurl = actions.global.baseurl || 'http://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}';
+
+          this.basemap.setUrl(this.baseurl);
+        }
+
+        if (this.cartoDBLayer && ("http://"+self.cartoDBLayer.options.user_name+".cartodb.com/api/v2/viz/"+self.cartoDBLayer.options.layer_definition.stat_tag+"/viz.json" !== actions.global.vizjson)) {
+          this.map.removeLayer(this.cartoDBLayer);
+
+          this.cartoDBLayer = null;
+          this.created = false;
+        }
+
+        if (actions.global.vizjson && !this.cartoDBLayer) {
+          if (!this.created) { // sendCode debounce < vis loader
+            cdb.vis.Loader.get(actions.global.vizjson, function(vizjson) {
+              self.map.fitBounds(vizjson.bounds);
+
+              cartodb.createLayer(self.map, vizjson)
+                .done(function(layer) {
+                  self.cartoDBLayer = layer;
+
+                  var sublayer = layer.getSubLayer(0),
+                      layer_name = layer.layers[0].options.layer_name,
+                      filter = actions.global.cartodb_filter ? " WHERE "+actions.global.cartodb_filter : "";
+
+                  sublayer.setSQL("SELECT * FROM "+layer_name+filter)
+
+                  self.map.addLayer(layer);
+
+                  self._resetActions(actions);
+                }).on('error', function(err) {
+                  console.log("some error occurred: " + err);
+                });
+            });
+
+            this.created = true;
+          }
+
+          return;
+        }
+
+        this._resetActions(actions);
+      },
+
+      _resetActions: function(actions) {
+        // update footer title and author
+        var title_ = actions.global.title === undefined ? '' : actions.global.title,
+            author_ = actions.global.author === undefined ? 'Using' : 'By '+actions.global.author+' using';
+
+        document.getElementById('title').innerHTML = title_;
+        document.getElementById('author').innerHTML = author_;
+        document.title = title_ + " | " + author_ +' Odyssey.js';
+
+        var sl = actions;
+
+        document.getElementById('slides').innerHTML = ''
+        this.progress.count(sl.length);
+
+        // create new story
+        for(var i = 0; i < sl.length; ++i) {
+          var slide = sl[i];
+          var tmpl = "<div class='slide' style='diplay:none'>";
+
+          tmpl += slide.html();
+          tmpl += "</div>";
+          document.getElementById('slides').innerHTML += tmpl;
+
+          this.progress.step(i).then(this.seq.step(i), this.seq)
+
+          var actions = O.Parallel(
+            this.slides.activate(i),
+            slide(this),
+            this.progress.activate(i),
+            resizeAction
+          );
+
+          actions.on("finish.app", function() {
+            adjustSlides();
+          });
+
+          this.story.addState(
+            this.seq.step(i),
+            actions
+          )
+        }
+
+        this.story.go(this.seq.current());
+      },
+
+      changeSlide: function(n) {
+        this.seq.current(n);
+      }
+    });
+  </script>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-20934186-21', 'cartodb.github.io');
+    ga('send', 'pageview');
+  </script>
+
+  <script type="text/javascript" src="http://fast.fonts.net/jsapi/3af16084-ba56-49ca-b37d-0b49b59e1927.js"></script>
+
+<script id="md_template" type="text/template">```
+-title: "Atlas de la Peste Negra"
+-author: "Clara Rodríguez Fernández"
+-baseurl: "http://a.tiles.mapbox.com/v4/clara92r.dwdxcsnz/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg"
+-vizjson:"https://clara92r.carto.com/api/v2/viz/769b008c-78ca-11e5-a0e6-0ea31932ec1d/viz.json"
+```
+
+#El comercio en la Baja Edad Media
+```
+- center: [48.4875, 14.6777]
+- zoom: 4
+```
+
+A partir del siglo XII el comercio medieval sufrió profundos cambios: de una economía rural y cerrada, propia del sistema feudal de la época, se transformó gradualmente a una economía abierta y comercial. Industria, mercados y dinero volvieron a recobrar importancia en un auténtico renacimiento comercial no visto desde la caída del Imperio Romano.
+
+Sin embargo, esta nueva apertura del sistema comercial europeo influyó crucialmente en la expansión de la Peste Negra: la bacteria se expandió primeramente por las rutas comerciales marítimas del Mediterráneo y Atlántico y, posteriormente por la red comercial intraeuropea.
+
+
+#Constantinopla
+```
+- center: [41.1456, 28.9160]
+- zoom: 5
+L.marker([41.1456,28.9160]).actions.addRemove(S.map)
+```
+Capital del imperio bizantino y punto de enlace estratégico  entre Europa, Asia y África, la Constantinopla bizantina fue baluarte de la Cristiandad y heredera del mundo griego y romano, además de ser un nexo de comercio entre diferentes culturas.
+
+![Constantinopla](http://2.bp.blogspot.com/-siHAK74TmLU/VErbo-hq_OI/AAAAAAAAHFY/jYLFMIbk34s/s1600/bautizo%2Bde%2Bconstantino.png)
+
+
+#Ruta de las Especias y de la Seda
+```
+- center: [36.2088, 34.7168]
+- zoom: 5
+L.marker([36.2088, 34.7168]).actions.addRemove(S.map)
+```
+El centro del continente asiático fue cruzado por rutas comerciales muy importantes durante la Edad Media.
+
+![Ruta Seda](http://www.travelbike.eu/upload/pack/149/131-desde-comerciantes-como-marco-polo-a-militares-como-jenofonte-a-lo-largo-de-la-historia-muchos-grandes-aventureros-han-sido-tambien-celebrados-liter.jpg)
+
+
+Una de las más conocidas fue la Ruta de la Seda, cuyas ciudades han quedado como muestra de la riqueza de aquellos intercambios. Otra ruta importante fue la de las Especias. Los mercaderes cruzaban todo el continente asiático en busca de productos de lujo muy codiciados por la nobleza europea.
+ 
+
+
+#Los Estados italianos
+```
+- center: [44.15068116,11.33789062]
+- zoom: 5
+L.marker([44.15068116,11.33789062]).actions.addRemove(S.map)
+```
+
+Durante la Baja Edad Media eran numerosos los Estados Italianos que se  habían constituido; Sicilia y Nápoles al sur; en el centro, los Estados papales; y, en el Norte estaban las ricas ciudades libres, que constituían por entonces uno de los núcleos más importantes de la vida económica del Mediterráneo.
+
+![Italia](http://1.bp.blogspot.com/-Ft-TTwy3xB4/Tgh_XEoGqwI/AAAAAAAACo8/LlNsxZ7Pfhk/s1600/Nuremberg_chronicles_f_58v_1.jpg)
+
+El resurgimiento económico y demográfico de los siglos XI y XII tuvo un gran efecto en Italia, donde confluían dos de los principales grandes ejes económicos de la cristiandad. Ahí se interconectaban la ruta que se unía con las ciudades de la Liga Hanseática que atravesaba el Rin y el Ródano hacia Italia con las rutas marítimas que a través del Mediterráneo trasportaban las especias y productos de lujo de Oriente y los países musulmanes.
+
+Convertidas en emporios comerciales, muchas ciudades italianas experimentaron un desarrollo económico que les llevó a crear flotas mercantes y barrios comerciales en Oriente (Palestina, Bizancio, Egipto...). Algunas, particularmente Génova y Venecia, extendieron su dominio a islas y puertos a lo largo del mar Mediterráneo y el mar Negro forjando auténticos imperios de ultramar.
+
+#El comercio peninsular
+```
+- center: [40.2459915,-4.04296875]
+- zoom: 5
+L.marker([40.2459915,-4.04296875]).actions.addRemove(S.map)
+```
+
+La ganadería ovina fue uno de los desencadenantes de la recuperación económica de Castilla junto con la aparición y el enorme progreso de las ferias de Medina del Campo o Burgos, y otros centros comerciales de la Meseta (Segovia, Toledo, Cuenca...). 
+
+![España](https://slowfood.es/wp-content/uploads/2011/06/mesta.jpg)
+
+La Guerra de los Cien Años ralentizó y, a veces, interrumpió la exportación de lana inglesa al resto de Europa,  lo que obligó a los grandes magnates del tejido europeo a recurrir a la lana castellana. Flamencos, franceses e italianos ofrecían por la lana merina de calidad mucho más que los pañeros locales, de modo que la actividad artesanal o bien se constriñó, o bien cayó en manos de extranjeros.
+
+Castilla se convirtió en un país sin industria, dominado por una aristocracia rural y dependiente del exterior en todos los productos manufacturados.
+
+#Las ferias de Champagne
+```
+- center: [48.69096039,3.1640625]
+- zoom: 5
+L.marker([48.69096039,3.1640625]).actions.addRemove(S.map)
+```
+
+Los condes de Champagne buscaron con la organización de ferias y mercados permanentes provocar en su territorio el encuentro entre mercaderes flamencos e italianos, principalmente.
+
+![champagne](http://www.lebrelblanco.com/anexos/imagenes/a0104_clip_image009.jpg)
+
+La originalidad de las ferias champañesas residía en que constituían un ciclo ininterrumpido de encuentros comerciales llenando prácticamente todo el calendario del año. Cada feria duraba de tres a seis semanas. Gustave Carré ya mencionó la existencia de ferias en Troyes desde el siglo V.
+
+#La liga Hanseática
+```
+- center: [55.12864907,10.81054688]
+- zoom: 5
+L.marker([55.12864907,10.81054688]).actions.addRemove(S.map)
+```
+La Liga Hanseática o Hansa  fue una federación comercial y defensiva de ciudades del norte de Alemania y de comunidades de comerciantes alemanes en el mar Báltico, los Países Bajos, Suecia, Polonia y Rusia, así como regiones que ahora se encuentran en Estonia, Letonia y Lituania.
+
+
+![Hansa](http://4.bp.blogspot.com/-yUamBsAnb38/UiHLnPahdVI/AAAAAAAAYxc/SVoHyyp72J4/s1600/ricardo+garcia+romero.jpg)
+
+Para beneficiar una mayor disposición que favoreciera su labor de abastecerse y comerciar con sus vecinos, estos grupos de comerciantes fueron estableciéndose en diversas áreas geográficas sumamente estratégicas. Su centro de operaciones más antiguo fue Visby, en la báltica isla de Gotland, en donde estuvieron presentes desde el siglo XII, pero ésta acabaría siendo desbancada en importancia durante el siglo XIII por otros dos núcleos: Lübeck (ciudad hanseática en origen junto a Gdansk, Colonia y Brunswick) y Hamburgo.
+
+Por su localización, Lübeck era perfecta para el comercio en el Báltico, mientras que Hamburgo sería idónea para operar en el Mar del Norte. Llegaron a contar con decenas de ciudades y puertos asociados a su causa, fomentando un incesante tráfico de productos hacia Inglaterra, Países Bajos, el estrecho escandinavo, Francia, Europa central e incluso el Estrecho de Gibraltar.
+
+Especializados en la comercialización de maderas, ámbar, pieles, cera y arenques de Escania; monopolizadores de todo el tráfico de sal, miel y grano en el Báltico, almacenaban sus diversos productos en sus principales factorías en Londres, Brujas, Bergen y Novgorod. En estas factorías, que funcionaban como auténticas colonias, recibían paños flamencos, vino y otros elementos de lujo como especias procedentes del Mediterráneo.
+
+#Venecia
+```
+- center: [45.4524, 12.3047]
+- zoom: 6
+L.marker([45.4524, 12.3047]).actions.addRemove(S.map)
+```
+Durante el siglo XII, los venecianos expandieron su influencia tomando parte activa en las cruzadas. A medida que el poder de Bizancio decaía, Venecia se encargó de ese comercio y utilizó varias islas bien localizadas, tales como Corfú y Creta como puertos.
+
+![Venezia](http://www.librosmaravillosos.com/laepopeyadelamedicina/imagenes/07-10.jpg)
+
+Finalmente Venecia se separó del decadente impero bizantino en 1203 durante la IV Cruzada, cuando los soldados venecianos asaltaron y conquistaron Constantinopla. Después de la conquista, Venecia logró extender su supremacía creando un largo imperio colonial.
+
+
+Las caravanas de barcos navegaron hasta Levante para comprar algodón, seda y porcelana de China, especias de Zanzíbar e Indonesia, y gemas y marfil de Burma. Venecia era concida por su encaje y su cristalería.
+
+
+
+#Florencia
+
+```
+- center: [43.7751, 11.2500]
+- zoom: 6
+L.marker([43.7751, 11.2500]).actions.addRemove(S.map)
+```
+Durante los siglos XII-XIV se produjo un gran desarrollo económico que se basó primero en la artesanía y el comercio de la lana y, en una segunda fase, en la ampliación del textil (con más materiales como la seda y tintes) y el negocio bancario (Alberoni, Pazzi y Medici).
+
+![Firenze](http://1.bp.blogspot.com/-iUPFVW3aJLk/UIK73iVbN_I/AAAAAAAABlE/5RaLFwDhLrA/s1600/Nuremberg_chronicles_-_FLORENCIA.png)
+
+Fue creciendo así su importancia, primero en el área local, para luego (siglo XIII) extenderse a toda la Península italiana (competiendo directamente con Venecia) y, a través de las famosas ferias de la Champaña, con Francia, Flandes (Países Bajos) y el Levante español (del que traían el alumbre para la tintura). Durante esa expansión se enfrentó a Lucca y Siena, y más tarde conquistó Pisa, fundamental al ser el puerto natural para sacar sus productos al Mediterráneo.
+
+#Génova
+
+```
+- center: [44.4102, 8.9429]
+- zoom: 6
+L.marker([44.4102, 8.9429]).actions.addRemove(S.map)
+```
+El derrumbe de los enclaves cruzados en el siglo XIII, fue compensado suficientemente por la alianza de Génova con el imperio Bizantino el año 1261, el cual pavimentó el camino para un gran dominio en el mar Negro. 
+
+![Genoa](http://www.edobne.com/manuscrtcao/wp-content/uploads/g%C3%A9nova.jpg)
+
+Su desarrollo económico fue creciendo gradualmente hasta convertirla en una capital con amplio dominio sobre las costas de Crimea. Muchas islas Egeas se convirtieron en dependientes de Génova.
+Llegó a convertirse en potencia financiera de Europa y uno de los puertos comerciales más importantes del Mediterráneo, rivalizando con Pisa y Venecia. 
+
+#Barcelona
+
+```
+- center: [41.3933, 2.1533]
+- zoom: 6
+L.marker([41.3933, 2.1533]).actions.addRemove(S.map)
+```
+Durante la época medieval, Cataluña mantuvo un incesante tráfico de mercancías con la zona mediterránea, estableciéndo numerosas rutas de fuerte presencia a través de las cuales se realizaban las actividades mercantiles de importación y exportación, tomando como base el puerto de Barcelona.
+
+![Barcelona](http://timerime.com/user_files/180/180174/media/barcelona%20medieval.jpg)
+
+Cataluña tenía establecidos consulados y bancos en distintos puntos de la costa mediterránea, así como compañías aseguradoras de los fletes. La actividad comercial más intensa se produjo entre 1280 y 1348.
+
+#Toledo
+
+```
+- center: [39.8592, -4.0430]
+- zoom: 6
+L.marker([39.8592, -4.0430]).actions.addRemove(S.map)
+```
+A lo largo de toda la Edad Media, Toledo experimentó un gran crecimiento comercial: en el siglo XIV recibió privilegio ferial y, a finales de siglo se convirtió en uno de los principales productores pañeros castellanos, actividad que se sumó a las ya existentes de acuñación de monedas, fabricación de armas, industria sedera, etc.
+
+![Toledo](http://farm5.static.flickr.com/4077/4810706126_d728840644_o.jpg)
+
+La tradición del arte del acero toledano ha sido siempre legendaria. Las mejores espadas de la época bajomedieval eran de Toledo, a cuyo río, el Tajo, se le atribuían propiedades casi milagrosas para darle calidad a sus hojas.
+
+#París
+
+```
+- center: [48.8575, 2.3511]
+- zoom: 6
+L.marker([48.8575, 2.3511]).actions.addRemove(S.map)
+```
+Situada a orillas del Sena, el transporte de los productos parisinos se llevaba a cabo esencialmente por vía marítima o fluvial. 
+
+![Paris](http://cdnstatic.visualizeus.com/thumbs/f0/36/medieval,paris,publicdomain-f036cc3bc4038ddb8ffdd7a74a7fc244_h.jpg)
+
+
+Por otro lado, París destacó por la exportación de productos de primera necesidad a otras regiones. Las populosas ciudades de Flandes necesitaban el trigo y vino procedente de la región de París, los cuales eran transportados en grandes carretas por el norte de Francia.
+
+#Londres
+
+```
+- center: [51.5156, -0.1318]
+- zoom: 6
+L.marker([51.5156, -0.1318]).actions.addRemove(S.map)
+```
+Durante el siglo XIV el puerto de Londres se convirtió en centro de distribución de mercancías. La lana en bruto era el producto más importante de Inglaterra y, por tanto su exportación más abundante.
+
+![Brujas](http://www.laplazadelmercader.com/wp-content/uploads/2014/11/London-SSPaul-BondECA-004-b.jpg)
+
+Esta materia prima se exportaba principalmente a Flandes y Florencia para fabricar telas de calidad. A principios del siglo XIV el floreciente comercio de la lana llegó a un máximo de una media anual de exportación de 35.000 sacos.
+
+#Brujas
+
+```
+- center: [51.2138, 3.2300]
+- zoom: 6
+L.marker([51.2138, 3.2300]).actions.addRemove(S.map)
+```
+A partir del siglo XIII los comerciantes más conocidos de todo el mundo llegaban a la ciudad para vender sus productos y comerciar con la lana y los paños flamencos. La industria textil belga era una de las más aclamadas de la época. 
+
+![Brujas](http://www.historytrips.eu/images/brugge/DSC00850.jpg)
+
+Ya en el siglo XIV, Bujas se había convertido en un importante centro financiero internacional. Italianos , alemanes, escoceses y españoles hicieron de Brujas su auténtico centro comercial, donde se podían oír una gran cantidad de idiomas y se podían encontrar los productos más exóticos.
+
+#Gdansk
+
+```
+- center: [54.3614, 18.6548]
+- zoom: 6
+L.marker([54.3614, 18.6548]).actions.addRemove(S.map)
+```
+Junto con Hamburgo, Lübeck y Stettin, Gdansk fue en uno de los focos principales del comercio báltico. Era el puerto principal de los países del Vístula y desempeñó un gran papel en el comercio de granos de la región, a la vez que intervenía en las guerras contra los piratas y los reyes escandinavos.
+
+![Gdansk](http://www.gsea.pl/assets/regions/gdansk-5a337803d2306700e06dda7a5c9dc217.jpg)
+
+#Fuentes
+```
+- center: [48.4875, 14.6777]
+- zoom: 4
+```
+Datos del Mapa
+
+• GARCÍA DE COTÁZAR, José Ángel y SESMA DE MUÑOZ, José Ángel, Historia de la Edad Media: Una síntetis interpretativa. ALIAZA EDITORIAL, 2002 
+
+Bibliografía
+
+• SUÁREZ FERNÁNDEZ, Luis, Historia social y económica de la Edad Media europea. ESPASA CALPE, 1984
+
+• [Liga Hanseática ](http://queaprendemoshoy.com/la-liga-hanseatica-poder-y-ocaso-en-la-baja-edad-media/)
+
+• [Las ferias de Champaña](http://www.lebrelblanco.com/anexos/a0104.htm)
+
+• [Brujas](http://sobrebelgica.com/2008/10/12/la-historia-de-brujas-la-venecia-del-norte/)
+
+• [Londres](http://www.miseshispano.org/2012/01/el-mercantilismo-en-inglaterra/)
+
+• [París](https://en.wikipedia.org/wiki/Paris_in_the_Middle_Ages#Commerce)
+
+• [Florencia](http://biombohistorico.blogspot.com.es/2013/09/la-florencia-medieval.html)
+
+• [Génova](http://www.mgar.net/var/genova.htm)
+
+• [Venecia](http://www.enciclopediahistoria.com/2014/06/venecia-en-la-edad-media-1100-1500.html)
+
+</script></body></html>

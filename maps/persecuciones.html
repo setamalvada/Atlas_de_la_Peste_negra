@@ -1,0 +1,340 @@
+<!doctype><html><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Odyssey.js Slides</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/x-icon" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+  <link rel="icon" type="image/png" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+
+  <link rel="stylesheet" href="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/themes/css/cartodb.css">
+  <link rel="stylesheet" href="http://cartodb.github.io/odyssey.js/sandbox/css/slides.css">
+  <script src="http://cartodb.github.io/odyssey.js/vendor/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+  <div id="map" style="width: 100%; height: 100%;"></div>
+
+  <div id="slides_container" style="display:block;">
+    <div id="dots"></div>
+
+    <div id="slides"></div>
+
+    <ul id="navButtons">
+      <li><a class="prev"></a></li>
+      <li><a class="next"></a></li>
+    </ul>
+  </div>
+
+  <div id="credits">
+    <span class="title" id="title">Title</span>
+    <span class="author"><strong id="author">By Name using</strong> <a href="http://cartodb.github.io/odyssey.js/">Odyssey.js</a><span>
+  </span></span></div>
+
+  <script src="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
+  <script src="http://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
+
+  <script>
+    var resizePID;
+
+    function clearResize() {
+      clearTimeout(resizePID);
+      resizePID = setTimeout(function() { adjustSlides(); }, 100);
+    }
+
+    if (!window.addEventListener) {
+      window.attachEvent("resize", function load(event) {
+        clearResize();
+      });
+    } else {
+      window.addEventListener("resize", function load(event) {
+        clearResize();
+      });
+    }
+
+    function adjustSlides() {
+      var container = document.getElementById("slides_container"),
+          slide = document.querySelectorAll('.selected_slide')[0];
+
+      if (slide) {
+        if (slide.offsetHeight+169+40+80 >= window.innerHeight) {
+          container.style.bottom = "80px";
+
+          var h = container.offsetHeight;
+
+          slide.style.height = h-169+"px";
+          slide.classList.add("scrolled");
+        } else {
+          container.style.bottom = "auto";
+          container.style.minHeight = "0";
+
+          slide.style.height = "auto";
+          slide.classList.remove("scrolled");
+        }
+      }
+    }
+
+    var resizeAction = O.Action(function() {
+      function imageLoaded() {
+        counter--;
+
+        if (counter === 0) {
+          adjustSlides();
+        }
+      }
+      var images = $('img');
+      var counter = images.length;
+
+      images.each(function() {
+        if (this.complete) {
+          imageLoaded.call( this );
+        } else {
+          $(this).one('load', imageLoaded);
+        }
+      });
+    });
+
+    function click(el) {
+      var element = O.Core.getElement(el);
+      var t = O.Trigger();
+
+      // TODO: clean properly
+      function click() {
+        t.trigger();
+      }
+
+      if (element) element.onclick = click;
+
+      return t;
+    }
+
+    O.Template({
+      init: function() {
+        var seq = O.Triggers.Sequential();
+
+        var baseurl = this.baseurl = 'http://{s}.api.cartocdn.com/base-light/{z}/{x}/{y}.png';
+        var map = this.map = L.map('map').setView([0, 0.0], 4);
+        var basemap = this.basemap = L.tileLayer(baseurl, {
+          attribution: 'data OSM - map CartoDB'
+        }).addTo(map);
+
+        // enanle keys to move
+        O.Keys().on('map').left().then(seq.prev, seq)
+        O.Keys().on('map').right().then(seq.next, seq)
+
+        click(document.querySelectorAll('.next')).then(seq.next, seq)
+        click(document.querySelectorAll('.prev')).then(seq.prev, seq)
+
+        var slides = O.Actions.Slides('slides');
+        var story = O.Story()
+
+        this.story = story;
+        this.seq = seq;
+        this.slides = slides;
+        this.progress = O.UI.DotProgress('dots').count(0);
+      },
+
+      update: function(actions) {
+        var self = this;
+
+        if (!actions.length) return;
+
+        this.story.clear();
+
+        if (this.baseurl && (this.baseurl !== actions.global.baseurl)) {
+          this.baseurl = actions.global.baseurl || 'http://0.api.cartocdn.com/base-light/{z}/{x}/{y}.png';
+
+          this.basemap.setUrl(this.baseurl);
+        }
+
+        if (this.cartoDBLayer && ("http://"+self.cartoDBLayer.options.user_name+".cartodb.com/api/v2/viz/"+self.cartoDBLayer.options.layer_definition.stat_tag+"/viz.json" !== actions.global.vizjson)) {
+          this.map.removeLayer(this.cartoDBLayer);
+
+          this.cartoDBLayer = null;
+          this.created = false;
+        }
+
+        if (actions.global.vizjson && !this.cartoDBLayer) {
+          if (!this.created) { // sendCode debounce < vis loader
+            cdb.vis.Loader.get(actions.global.vizjson, function(vizjson) {
+              self.map.fitBounds(vizjson.bounds);
+
+              cartodb.createLayer(self.map, vizjson)
+                .done(function(layer) {
+                  self.cartoDBLayer = layer;
+
+                  var sublayer = layer.getSubLayer(0),
+                      layer_name = layer.layers[0].options.layer_name,
+                      filter = actions.global.cartodb_filter ? " WHERE "+actions.global.cartodb_filter : "";
+
+                  sublayer.setSQL("SELECT * FROM "+layer_name+filter)
+
+                  self.map.addLayer(layer);
+
+                  self._resetActions(actions);
+                }).on('error', function(err) {
+                  console.log("some error occurred: " + err);
+                });
+            });
+
+            this.created = true;
+          }
+
+          return;
+        }
+
+        this._resetActions(actions);
+      },
+
+      _resetActions: function(actions) {
+        // update footer title and author
+        var title_ = actions.global.title === undefined ? '' : actions.global.title,
+            author_ = actions.global.author === undefined ? 'Using' : 'By '+actions.global.author+' using';
+
+        document.getElementById('title').innerHTML = title_;
+        document.getElementById('author').innerHTML = author_;
+        document.title = title_ + " | " + author_ +' Odyssey.js';
+
+        var sl = actions;
+
+        document.getElementById('slides').innerHTML = ''
+        this.progress.count(sl.length);
+
+        // create new story
+        for(var i = 0; i < sl.length; ++i) {
+          var slide = sl[i];
+          var tmpl = "<div class='slide' style='diplay:none'>";
+
+          tmpl += slide.html();
+          tmpl += "</div>";
+          document.getElementById('slides').innerHTML += tmpl;
+
+          this.progress.step(i).then(this.seq.step(i), this.seq)
+
+          var actions = O.Parallel(
+            this.slides.activate(i),
+            slide(this),
+            this.progress.activate(i),
+            resizeAction
+          );
+
+          actions.on("finish.app", function() {
+            adjustSlides();
+          });
+
+          this.story.addState(
+            this.seq.step(i),
+            actions
+          )
+        }
+
+        this.story.go(this.seq.current());
+      },
+
+      changeSlide: function(n) {
+        this.seq.current(n);
+      }
+    });
+  </script>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-20934186-21', 'cartodb.github.io');
+    ga('send', 'pageview');
+  </script>
+
+  <script type="text/javascript" src="http://fast.fonts.net/jsapi/3af16084-ba56-49ca-b37d-0b49b59e1927.js"></script>
+
+<script type="text/template" id="md_template">```
+-title: "Atlas de la Peste Negra"
+-author: "Clara Rodríguez Fernández"
+-baseurl: "http://a.tiles.mapbox.com/v4/clara92r.dwdxcsnz/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg"
+-vizjson: "https://clara92r.cartodb.com/api/v2/viz/94c7378e-7d88-11e5-9a10-0e3a376473ab/viz.json"
+```
+
+#Malestares sociales: La persecución a los judíos en España y  Alemania
+```
+- center: [46.2407, 0.7910]
+- zoom: 5
+```
+
+La peste negra no favoreció de modo alguno a la solidaridad. La gente al saber que su hogar había sido infectado evitaba el contacto con sus semejantes. La insolidaridad no sólo estaba presente entre las personas sino también entre los países y regiones. En muchas ciudades se estableció una cuarentena para evitar el contagio.
+
+A pesar de que los judíos habían sufrido las mismas consecuencias de la epidemia que sus vecinos cristianos, no tardaron en ser culpados de ser responsables expandir la enfermedad envenenando los pozos de agua.
+
+En 1348, una vez hecha la acusación, se expandió rapidamente de ciudad en ciudad y emisarios oficiales fueron mandados por los dirigentes de varias ciudades a obtener confesiones de los judíos por medio del medio tradicional, es decir, la tortura. 
+
+
+
+#El caso de los judíos en España
+```
+- center: [40.2041, -5.9326]
+- zoom: 6
+```
+
+El primer estallido de las persecuciones surgió en el norte de España, donde la Peste Negra se cebó especialmente. Las juderías de Barcelona, Cervera y Tárrega fueron asaltadas en los meses de Junio y Julio.
+
+![Persecución Barcelona](https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Matanza_de_jud%C3%ADos_en_Barcelona_-_a%C3%B1o_1391.jpg/300px-Matanza_de_jud%C3%ADos_en_Barcelona_-_a%C3%B1o_1391.jpg)
+El estallido de la persecución contra los judíos en los reinos cristianos peninsulares estuvo en íntima relación con la crisis bajomedieval, convirtiéndose en verdaderos chivos expiatorios de todos los males que aquejaron a las sociedades medievales: motines y levantamientos de campesinos y de grupos populares urbanos derivaron, en muchas ocasiones, en asaltos a juderías y asesinatos de judíos. Pero, tampoco se puede obviar en el estudio de las causas de estas persecuciones la presión ejercida por el fanatismo de un conjunto de clérigos que enardecieron y empujaron a masas de cristianos contra sinagogas, haciendas y vidas de los judíos. 
+
+
+#Expansión de las masacres
+```
+- center: [43.8583, 4.9219]
+- zoom: 6
+```
+Las persecuciones se fueron expandiendo desde el sur de Francia hasta Alemania. En poblaciones como Chillon y Chambéry se obtuvieron confesiones de judíos que declararon que se elaboraró un complot a escala internacional en el que se dió orden de trasladar venenos provenientes de Toledo para posteriormente echarlos en los pozos de agua de los que se abastecían los cristianos. 
+
+Estas confesiones, que se  se expandieron sobre todas las ciudades Suiza provocaron las primeras quemas y saqueos de los barrios judíos en suelo suizo.
+![Quema Judíos](http://3.bp.blogspot.com/-3NZK9prpsHo/TmWSzte2GSI/AAAAAAAAOxY/TsQajSMB188/s400/Burning_Jews.jpg)
+
+#La persecución en Alemania 
+```
+- center: [50.2964, 7.6685]
+- zoom: 6
+```
+Durante el mes de Noviembre de 1348 el rumor de la conspiración llegó a Augsburgo, Würzburgo y Münich, para posteriormente expandirse en muchas poblaciones de Bavaria, con sus consecuentes ataques a los judíos. En el mes siguiente la gran epidemia llegó al Alto Rin con consecuencias similares.
+![strasburgo](https://upload.wikimedia.org/wikipedia/commons/9/9b/Pogrom_de_Strasbourg_1349.jpg)
+
+Fue especialmente violenta la masacre de Friburgo, en la que todos los judios fueron quemados, excepto doce de los más ricos, sólo para apropiarse de sus posesiones.
+
+Los efectos de las persecuciones sobre los judíos y la Peste Negra en Alemania fueron poco menos que desastrosos. Una parte de sus deudores murieron por la enfermedad, mientras que la otra parte las negaron en medio del caos general. Los judíos supervivientes tuvieron que pagar impuestos especiales durante dos años. 
+
+Finalmente, las autoridades civiles decidieron crear un plan de expulsión para desacerse de los judíos en las ciudades. Muchos de ellos emigraron a los países del este. Al final de siglo sólo había tres comunidades judías reconocidas en toda Alemania.
+
+
+#Las sectas de los Flagelantes y su papel en las persecuciones
+```
+- center: [46.2407, 0.7910]
+- zoom: 5
+```
+La autoflagelación pretendía expresar remordimiento y acabar con los pecados de la comunidad. Esta penitencia era muy anterior a la Peste Negra, pero nunca había estado tan demandada. Integrados básicamente por gentes procedentes de las bajas capas sociales, los Flagelantes surgieron casi al mismo tiempo por todas partes, desde Hungría hasta Inglaterra y desde Polonia hasta Francia Se les solía presentar como procedentes del extranjero, si bien con posteridad se sumaban al movimiento gentes del propio país. Esto quiere decir que ante los cortejos de los Flagelantes las fronteras desaparecían. 
+
+Al principio estos cortejos fueron bien recibidos. En 1348 el papa Clemente VI había permitido procesiones similares en Aviñón en rogativas contra la peste. Sin embargo, las autoridades se alarmaron pronto la ver la rápida expansión de las tendencias heréticas y violentas de los Flagelantes, especialmente entre las turbulentas gentes del sur de Francia. Muchos de los cortejos, respaldados por el populacho, eran los principales instigadores de los asaltos a los guetos judíos.
+
+![flagelantes](http://www.iglesiapueblonuevo.es/img/historia/flagelantes.jpg)
+A petición de la universidad de París, el papa ordenó una investigación cuidadosa, condenó el movimiento y prohibió las procesiones, en cartas del 20 de octubre de 1349 que fueron enviadas a los obispos de Francia, Alemania, Polonia, Suecia e Inglaterra. Se inició así una persecución contra los Flagelantes, que dió con algunos de ellos en la hoguera.
+
+Los Flagelantes acusaban a la Iglesia de descuidar sus deberes, además que al mismo tiempo afirmaban, preludiando doctrinas de gran predicamento en el futuro, que cualquiera podía conseguir la gracia sin la mediación de la Iglesia, la confesión ni la indulgencia. A los ojos de los Flagelantes la jerarquía parecía superflua, de ahí que ésta reaccionara con energía para cortar de raíz el subversivo movimiento.
+#Fuentes
+```
+- center: [46.2407, 0.7910]
+- zoom: 5
+```
+Datos del mapa
+
+• [Jewish Encyclopedia](http://www.jewishencyclopedia.com/articles/3349-black-death)
+
+• VICENS VIVES, Jaume, Historia económica de España y América, VICENS-BOLSILLO, 1974
+
+Bibliografía
+
+ • [Jewish Encyclopedia](http://www.jewishencyclopedia.com/articles/3349-black-death)
+ 
+ • [Las sectas  de los Flagelantes](http://lapestenegraporjusepe95.blogspot.com.es)
+
+</script></body></html>

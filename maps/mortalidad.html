@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html>
+<head>  
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas de la Peste Negra</title>
+  <meta name="description" content="An introduction to the Bushwick Community Map">
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+  <link rel="stylesheet" href="http://cartodb.github.io/odyssey.js/sandbox/css/slides.css"> 
+<link rel="stylesheet" href="cartodb.css">    
+  <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.4/mapbox.css' rel='stylesheet'/>  
+   <link rel="icon" type="image/png" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+  <style>
+    .ui{
+  position: absolute;
+  background-color: hsla(0, 0%, 100%, 0.92);  
+  border: 2px solid hsl(0, 0%, 100%);
+  border-radius: 7px;  
+  font-family: Helvetica, sans-serif;
+}
+  .ui.legend {
+  position: absolute;
+  z-index: 200;
+  right: 40px;
+  bottom: 20px;
+  width: 200px;
+  padding: 12px;   
+}
+
+.ui.legend h4 {
+  text-align: left;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.legend .legend-scale ul {
+  margin: 0;
+  margin-bottom: 5px;
+  padding: 0;
+  float: left;
+  list-style: none;
+}
+
+.legend .legend-scale ul li {
+  font-size: 13px;
+  list-style: none;
+  margin-left: 0;
+  line-height: 18px;
+  margin-bottom: 0px;
+}
+
+.legend ul.legend-labels li span {
+  display: block;
+  float: left;
+  height: 16px;
+  width: 30px;
+  margin-right: 5px;
+  margin-left: 1px;
+  border: 0.5px solid #000000;
+  opacity: 1;
+}
+
+.legend .legend-source {
+  font-size: 12px;
+  color: #999;
+  clear: both;
+}
+
+.ui.legend a {
+  color: #777;
+  width: 100%;
+  margin: inherit;
+  padding: 0 2px;
+  display: inline;
+  background-color: #fff;
+  box-shadow: 0;
+  border: 0;
+  border-radius: 0;
+  text-decoration: underline;  
+}
+
+.ui.legend a:hover {
+  color:#FFF;
+  background-color: #777;
+}
+
+    slides_container {
+      text-align: left;
+      margin: 0; padding: 0;
+      font-family: Georgia;
+      background: #EEE;
+    }
+    h2 {
+      font-weight: normal;
+    }    
+    #slides_container .slide {
+      max-height: 600px;
+    }    
+  </style>
+</head>
+<body>
+    <div id="map" style="width: 100%; height: 100%"></div>
+	<!-- empty div to render the legends template in -->
+  <div id="ui-legend" class="ui legend">
+    <h4>Tasas de mortalidad</h4>
+    <div class="legend-scale">
+	
+<ul class="legend-labels">
+        <li><h4>Países(%)</h4></li>
+        <li><span style="background:#FFEDA0;"></span>58.33 - 60</li>
+        
+        <li><span style="background:#FEB24C;"></span>60.01 - 62.5</li>
+        
+        <li><span style="background:#B10026;"></span>62.51-65</li>
+        
+        
+        
+      </ul>	
+	
+      <ul class="legend-labels">
+        <li><h4>Regiones(%)</h4></li>
+        <li><span style="background:#f7fcfd;"></span>43.83-45</li>
+        
+        <li><span style="background:#bfd3e6;"></span>45-48-50</li>
+        
+        <li><span style="background:#8c96c6;"></span>48.51-52.99</li>
+        
+        <li><span style="background:#7f66cc;"></span>53-57.49</li>
+        
+        <li><span style="background:#5b32d6;"></span>57.5-57.69</li>
+		
+		<li><span style="background:#3104b4;"></span>57.7-58.66</li>
+		
+		<li><span style="background:#210b61;"></span>58.67-60.31</li>
+        
+      </ul>
+	  
+	  <ul class="legend-labels">
+        <li><h4>Condados/Departamentos/Provincias(%)</</h4></li>
+        <li><span style="background:#FFFFB2;"></span>20-42.59</li>
+        
+        <li><span style="background:#FED976;"></span>43-51.25</li>
+        
+        <li><span style="background:#FEB24C;"></span>51.26-52.5</li>
+        
+        <li><span style="background:#FD8D3C;"></span>52.6-59.8</li>
+        
+        <li><span style="background:#FC4E2A;"></span>59.9-60.59</li>
+		
+		<li><span style="background:#E31A1C;"></span>60.6-66</li>
+		
+		<li><span style="background:#B10026;"></span>66.01-66.67</li>
+        
+      </ul>
+	  <ul class="legend-labels">
+        <li><h4>Distritos/Comunas(%)</h4></li>
+        <li><span style="background:#f7fcfd;"></span>16-35</li>
+        
+        <li><span style="background:#bfd3e6;"></span>35.01-42</li>
+        
+        <li><span style="background:#8c96c6;"></span>42.01-48</li>
+        
+        <li><span style="background:#7f66cc;"></span>48.01-53</li>
+        
+        <li><span style="background:#5b32d6;"></span>53.01-59</li>
+		
+		<li><span style="background:#3104b4;"></span>59.01-64</li>
+		
+		<li><span style="background:#210b61;"></span>64.01-80</li>
+        
+      </ul>
+	  
+	  
+    </div>
+	
+    
+  </div>
+  
+    <div id="slides_container" style="display:block;">
+    <div id="dots"></div>
+    <div id="slides">
+      <div class="slide">
+        <h1 id="rheingold">Mortalidad durante la epidemia</h1>
+        <p>
+          La información sobre mortalidad varía ampliamente entre las fuentes, pero se estima que alrededor de un tercio de la población de Europa murió desde el comienzo del brote a mitad del siglo XIV. 
+        </p>
+		<p>
+		Durante ese periodo fallecieron  entre un cuarto y la mitad de la población europea, fue una enfermedad letal contra la que los europeos del siglo XIV carecían completamente de defensas.
+		</p>
+        </div>
+      <div class="slide">
+        <h1 id="far">Mortalidad por países</h1>
+        <p>
+		  Existen dos factores esenciales que determinaron la mortalidad de un país:   
+        </p>
+		<p>
+        Cuanto más frío es el clima, menor es la posibilidad de contagio y por lo tanto la mortalidad es menor que en los países de clima cálido.
+		</p>
+		<p>
+        Otro factor es la densidad de población. La Peste Negra causó más mortalidad en países con mayor densidad de población, en donde la enfermedad se propagó más fácilmente.
+		</p>
+		<p>
+		</p>
+        </div>
+      <div class="slide">
+        <h1>Mortalidad en regiones de Inglaterra</h1>
+        <p>
+		Inglaterra es el único territorio del que se disponen los datos más fiables sobre la mortalidad provocada por la Peste Negra.  
+        </p>
+        <p>	
+		</p>
+      </div>
+      <div class="slide">
+        <h1>Mortalidad en regiones francesas e italianas</h1>
+        <p>
+		Los datos disponibles a Italia se refieren sólo al tercio norte de la península, altamente desarrollado y duramente castigado por la epidemia.
+		</p>  
+        <p>		
+		Los estudios de mortalidad en Francia tienen, como los italianos, un carácter altamente sesgado, refiriendose únicamente a la Francia sudoriental.
+		</p>
+		<p>		
+		</p>
+      </div>
+      <div class="slide">
+        <h1>Mortalidad en condados ingleses</h1>
+		<p>
+		A diferencia de los datos sobre mortalidad por peste procedentes de la Europa sudoccidental, la mortalidad en Inglaterra se refiere casi por entero al campo, a las poblaciones de los señoríos y al clero rural.
+		</p>
+        <p>
+		</p>
+		<p>
+		</p>
+        </div>
+      <div class="slide">
+        <h1>Mortalidad en departamentos franceses y provincias italianas</h1>
+        <p>
+		A partir de los datos de los registros de impuestos, libros de crónicas y registros parroquiales junto con el estudio epidemiológico de la enfermedad se han podido estimar la esperanza de vida de la población durante la epidemia. La gran mayoría de los datos recuperados para calcular las tasas de mortalidad de la Peste Negra corresponden en su gran mayoría a las cabezas de familia de hogares sujetos a impuestos y al clero, por tanto resulta poco preciso el cálculo de la esperanza de vida de la población femenina e infantil, aunque se cree que fue menor que la de los hombres. 
+		</p>
+		<p>
+		</p>
+        </div>
+		<div class="slide">
+        <h1>Mortalidad en distritos ingleses</h1>
+        <p>
+		Las divisiones más pequeñas del territorio son las más fiables, puesto que han sido sometidas al mínimo cálculo estadístico, al contrario de las divisiones anteriores. Estos datos corresponden a diversas fuentes: registros de impuestos, libros de registros parroquiales , señoríos... lo cual da lugar a datos de distinta fiabilidad.
+		</p>
+		<p>
+		</p>
+        </div>
+		<div class="slide">
+        <h1>Mortalidad en comunas francesas</h1>
+        <p>
+		Hay que tener el cuenta en el caso de Francia la importancia de  la Guerra de los Cien Años para poder tasar la mortalidad en este país. Sin embargo, las zonas representadas provienen de regiones en general poco afectadas por la guerra.
+		</p>
+		<p>
+		En cifras generales, las tasas de mortalidad de estas zonas se sitúan alrededor del sesenta por ciento. Otros datos adicionales situados en zonas más septentrionales de Francia corroboran la tasa media francesa.
+		</p>
+		<p>
+		</p>
+        </div>
+		<div class="slide">
+		 <h1>Fuentes</h1>
+		 <p>
+		 Ole J. BENEDICTOW, La Peste Negra, 1346-1353. La historia completa,
+         Madrid: Akal, 2011
+		 </p>
+		 </div>
+		    
+  </div> 
+  
+    <ul id="navButtons">
+      <li><a class="prev"></a></li>
+      <li><a class="next"></a></li>
+    </ul>
+  </div>
+<!--   <div id="credits">
+    <span class="title" id="title">Bushwick Community Map Introduction</span>
+    <span class="author"><strong id="author">By @clhenrick using</strong> <a href="http://cartodb.github.io/odyssey.js/">Odyssey.js</a><span></span></span>
+  </div>  -->
+
+  <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
+  <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.4/mapbox.standalone.js'></script>
+  <script src="http://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
+  <script>
+  
+
+  var app = app || {};
+
+  app.odysseyTest = (function(w,d,$,O) {
+
+    var el = {
+      map : null,
+      tileLayer : null,
+      story : null,
+      bushwick : null,
+      rheingold : null,
+      colony : null,
+      linden : null,
+      featureGroup : null,
+      rheingoldJson : null,
+      taxLots: null,
+      dobPermitsNB : null,
+      dobPermitsA1: null,
+      dobPermitsA2A3: null,
+      myLayer0: null,	   //Lo hemos añadido nosotros
+	  myLayer1: null,	   //Lo hemos añadido nosotros
+	  myLayer2: null,	   //Lo hemos añadido nosotros
+	  myLayer3: null,	   //Lo hemos añadido nosotros
+	  centroLondres: null,   //Lo hemos añadido nosotros	
+	  
+    }; 
+
+    var sql = {
+      all : "SELECT * FROM bushwick_pluto14v1",
+      rentStab : "SELECT a.* FROM bushwick_pluto14v1 a, bushwick_rent_stabl_merge_centroids b where st_intersects(a.the_geom, b.the_geom)",
+      vacant : "SELECT * FROM bushwick_pluto14v1 WHERE landuse = '11'",	 
+    };
+
+    var mapStyles = {
+      regular : '#bushwick_pluto14v1 {' +
+                      'polygon-fill: hsl(200,40%,90%);' +
+                      'polygon-opacity: 0.75;' +
+                      'line-color: #000;' +
+                      'line-width: 0.2;' +
+                      'line-opacity: 0.5;' +
+                    '}',
+      // red highlight                            
+      red : '#bushwick_pluto14v1 {' +
+                'polygon-fill: hsl(0,100%,30%);' +
+                'polygon-opacity: 0.75;' +
+                'line-color: #000;' +
+                'line-width: 0.2;' +
+                'line-opacity: 0.5;' +
+              '}',
+      // choropleth style for available FAR
+      availFAR : "#bushwick_pluto14v1{" +
+                        "polygon-fill: #FFFFB2;" +
+                        "polygon-opacity: 0.8;" +
+                        "line-color: #000;" +
+                        "line-width: 0.2;" +
+                        "line-opacity: 0.5;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 4] {" +
+                        "polygon-fill: #BD0026;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 3.2] {" +
+                        "polygon-fill: #F03B20;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 2.4000000000000004] {" +
+                        "polygon-fill: #FD8D3C;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 1.6] {" +
+                        "polygon-fill: #FECC5C;" +
+                        "}" +
+                        "#bushwick_pluto14v1 [ availablefar <= 0.8] {" +
+                        "polygon-fill: #FFFFB2;" +
+                      "}"    
+					  
+    };    
+
+    var initMap = function() {
+      //L.mapbox.accessToken = 'pk.eyJ1IjoicmFsY2FycmlhIiwiYSI6IlMtcUo5dDQifQ.q3GhOqJgpZyBkLFXop2mTQ'; //Esta es la mía
+	  //L.mapbox.accessToken = 'pk.eyJ1IjoiY2hlbnJpY2siLCJhIjoiLVhZMUZZZyJ9.HcNi26J3P-MiOmBKYHIbxw'; //Esta era la del ejemplo
+	  L.mapbox.accessToken = 'pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg'; //La de Clara
+	  
+      el.map = new L.map('map').setView([40.6941, -73.9162],4);
+      //el.tileLayer = L.mapbox.tileLayer('chenrick.map-3gzk4pem').addTo(el.map); 
+	  el.tileLayer = L.mapbox.tileLayer('clara92r.dwdxcsnz').addTo(el.map); //El de Clara
+	  
+      el.bushwick = new L.LatLng(40.6941, -73.9162);
+      el.rheingold = new L.LatLng(40.700740, -73.934209);
+      el.colony = new L.LatLng(44.2039, 3.5925);
+      el.linden = new L.LatLng(40.692776,-73.919756); 
+      el.centroLondres = new L.LatLng(53.9302,-3.3398);  //Lo hemos añadido nosotros para poder centrar el mapa en estas coordenadas
+	  el.inglaterra= new L.LatLng(52.6664,-4.8450);
+	  el.franita= new L.LatLng(44.6647,5.7678);
+	  el.fran= new L.LatLng(44.7292,4.4495);
+      el.featureGroup = L.featureGroup().addTo(el.map);  
+    //  loadRheingold();  No necesitamos cargar la capa en geoJSON.
+    }            
+
+    var loadCdbData = function() {
+      var cdbURL = "http://bushwick.cartodb.com/api/v2/viz/64ceb582-71e2-11e4-b052-0e018d66dc29/viz.json";
+    
+	cartodb.createLayer(el.map, cdbURL, {
+        cartodb_logo: false,
+        legends: false
+      },
+	  
+      function(layer) {        
+        el.taxLots = layer.getSubLayer(0);        
+
+        el.dobPermitsNB = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_nb",
+          cartocss : '#exp_codedjobs_nb {marker-width: 10; marker-fill: hsl(350,0%,0%); marker-line-color: white; marker-line-width: 0.8;}'         
+        });
+
+        el.dobPermitsA1 = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_a1",
+          cartocss : '#exp_codedjobs_a1 {marker-width: 10; marker-fill: hsl(0,0%,30%); marker-line-color: white; marker-line-width: 0.8;}'
+        });
+
+        el.dobPermitsA2A3 = layer.createSubLayer({
+          sql : "SELECT * FROM exp_codedjobs_a2a3",
+          cartocss : '#exp_codedjobs_a2a3 {marker-width: 10; marker-fill: hsl(0,0%,30%); marker-line-color: white; marker-line-width: 0.8;}'
+        });        
+
+        console.log('dob sublayers: ', el.dobPermitsA1, el.dobPermitsA2A3 );
+
+        // hide layers on load
+        
+		//el.taxLots.hide(); Menos taxLots, que la vamos a mostrar
+        el.dobPermitsNB.hide();
+        el.dobPermitsA1.hide();
+        el.dobPermitsA2A3.hide();
+
+        el.map.addLayer(layer, false);
+        el.tileLayer.bringToBack();
+
+      });  
+	  
+	 
+	  var myURL = "https://clara92r.cartodb.com/api/v2/viz/a6aea43e-99dd-11e5-809d-0e3a376473ab/viz.json";
+	  
+	  cartodb.createLayer(el.map, myURL, {
+        cartodb_logo: false,
+        legends:false,
+      },
+      function(layer) {        
+       		
+		
+		el.myLayer0 = layer.getSubLayer(0);
+		el.myLayer1 = layer.getSubLayer(1);
+		el.myLayer2 = layer.getSubLayer(2);
+		el.myLayer3 = layer.getSubLayer(3);
+		//el.myLayer4 = layer.getSubLayer(4);
+		//el.myLayer5 = layer.getSubLayer(5);
+		//el.myLayer6 = layer.getSubLayer(6); Esta sublayer ya no existe
+
+        
+        // hide layers on load
+        el.myLayer0.hide();
+		el.myLayer1.hide();
+		el.myLayer2.hide();
+		el.myLayer3.hide();
+		//el.myLayer4.hide();
+		//el.myLayer5.hide();
+		
+        
+        el.map.addLayer(layer, false);
+        el.tileLayer.bringToBack();
+
+      });  
+	
+	  
+    }
+
+    function click(el) {
+      var element = O.Core.getElement(el);
+      var t = O.Trigger();
+
+      function click() {
+        // console.log(el);
+        t.trigger();
+      }
+
+      if (element) element.onclick = click;
+
+      return t;
+    }
+    
+    
+    // trigger a custom event called SlideChange
+    var emitSlideChange = O.Action( function() {
+     $(document).trigger('slideChange', function() {
+      console.log(seq.current())
+     });
+    });
+
+    // listen for the slideChange event to be triggered
+    function listenSlideChange() {
+      $(document).on('slideChange', function() {
+        console.log('listened to slidechange');
+        trackCurrentSlide();
+      });
+    }    
+
+    // fire this each time the user changes a slide
+    function trackCurrentSlide() {
+      slides = $('#slides').children(); // creates an array of slides                 
+      slides.each(function(i){
+        if ($(this).hasClass('selected')) {
+          console.log('index: ', i);
+          checkIndex(i);
+        }
+      }); 
+    }
+
+    // check the index being returned by trackCurrentSlide()
+    function checkIndex(index) {
+      switch(index){
+        case 0: console.log('first slide!'), slideOne(); 
+        break;
+        case 1: console.log('second slide!'), slideTwo();
+        break;
+        case 2: console.log('third slide!'), slideThree();
+        break;
+        case 3: console.log('fourth slide'), slideFour();
+        break;    
+        case 4: console.log('fifth slide'), slideFive();
+        break; 	
+        case 5: console.log('sixth slide'), slideSix();
+        break; 	
+		case 6: console.log('seventh slide'), slideSeven();
+        break; 	
+		case 7: console.log('eighth slide'), slideEight();
+        break; 	
+		case 8: console.log('ninth slide'), slideNine();
+        break; 	
+		case 9: console.log('tenth slide'), slideTen();
+        break; 			
+        default: console.log('out of slide counters');  
+      }
+    }
+
+    function slideOne() {
+      el.taxLots.setSQL(sql.all);
+      el.taxLots.setCartoCSS(mapStyles.availFAR);   
+      el.dobPermitsA1.hide();
+      el.dobPermitsA2A3.hide();	  
+      el.dobPermitsNB.hide();
+      el.myLayer1.hide();	  
+      el.taxLots.hide(); 
+	  el.myLayer3.hide();
+	  el.myLayer0.hide();
+	  //el.myLayer5.show();
+	  //el.myLayer4.hide();
+    
+    }
+
+    function slideTwo() {      
+     el.taxLots.hide();
+      el.dobPermitsNB.hide();
+      el.myLayer3.show();//paises
+      //el.myLayer5.show();
+      el.myLayer1.hide();	  
+    }
+
+    function slideThree() {
+      el.myLayer1.hide();
+	  el.myLayer0.hide();
+	  el.myLayer2.show();//regiones
+	  el.myLayer3.hide();
+	  //el.myLayer5.show();      
+    }
+
+    function slideFour() {
+      el.myLayer2.show();//regiones
+      el.myLayer1.hide();
+	  el.myLayer3.hide();
+	  //el.myLayer5.show();
+    }
+	
+	function slideFive() {
+	  el.myLayer1.show();//provincias
+	  el.myLayer0.hide();
+	  el.myLayer3.hide();
+      el.myLayer2.hide();
+	  el.myLayer4.hide();
+	  el.myLayer3.hide();
+	  //el.myLayer5.show();
+	  }
+	  
+    function slideSix() {  
+	  el.myLayer0.hide();
+	  el.myLayer1.show();//provincias
+	  el.myLayer3.hide();
+      el.myLayer2.hide();
+	  el.myLayer4.hide();
+	  el.myLayer3.hide();
+	  //el.myLayer5.show();
+	  }
+	function slideSeven() {
+       el.myLayer1.hide();
+	  el.myLayer0.show();//comunas
+	  el.myLayer3.hide();
+      el.myLayer2.hide();
+	  el.myLayer4.hide();
+	  el.myLayer3.hide();
+	  //el.myLayer5.show();
+	}
+
+	function slideEight() {
+       el.myLayer1.hide();
+	  el.myLayer0.show();//comunas
+	  el.myLayer3.hide();
+      el.myLayer2.hide();
+	  el.myLayer4.hide();
+	  el.myLayer3.hide();
+	  //el.myLayer5.show();
+	}
+	function slideNine() {
+       el.myLayer1.hide();
+	  el.myLayer0.show();//comunas
+	  el.myLayer3.hide();
+      el.myLayer2.hide();
+	  el.myLayer4.hide();
+	  el.myLayer3.hide();
+	  //el.myLayer5.show();
+	}
+	
+	
+    function initOdyssey(O) {
+      var map = el.map;
+      // O is for Odyssey
+      // var O = O;
+
+      var seq = O.Triggers.Sequential();
+
+      // enable keys to move slides
+      O.Triggers.Keys().left().then(seq.prev, seq)
+      O.Triggers.Keys().right().then(seq.next, seq)
+      // set up triggers for slide arrows 
+      click(document.querySelectorAll('.next')).then(seq.next, seq)
+      click(document.querySelectorAll('.prev')).then(seq.prev, seq)  
+
+      var slides = O.Actions.Slides('slides');
+      el.story = O.Story()
+        .addState(
+          seq.step(0),
+          O.Parallel( 
+            el.map.actions.setZoom(4),
+			el.map.actions.panTo(el.centroLondres),	      	  
+            slides.activate(0),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(1),
+          O.Parallel(
+            el.map.actions.setZoom(4),
+			el.map.actions.panTo(el.centroLondres),	
+            slides.activate(1),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(2),
+          O.Parallel(
+            el.map.actions.setZoom(6),
+			el.map.actions.panTo(el.inglaterra),	            
+            slides.activate(2),
+            emitSlideChange
+          )
+        )
+        .addState(
+          seq.step(3),
+          O.Parallel(  
+            el.map.actions.setZoom(6),
+			el.map.actions.panTo(el.franita),			
+            slides.activate(3),
+            emitSlideChange
+          )
+        )   
+		//El siguiente es nuestro
+		.addState(
+          seq.step(4),
+          O.Parallel(              
+			el.map.actions.setZoom(6),
+			el.map.actions.panTo(el.inglaterra),		  
+            slides.activate(4),
+            emitSlideChange
+          )
+        )
+		//El siguiente es nuestro
+		.addState(
+          seq.step(5),
+          O.Parallel(              
+			el.map.actions.setZoom(6),
+			el.map.actions.panTo(el.franita),		  
+            slides.activate(5),
+            emitSlideChange
+          )
+        )
+		//El siguiente es nuestro
+		.addState(
+          seq.step(6),
+          O.Parallel(              
+			el.map.actions.setZoom(6),
+			el.map.actions.panTo(el.inglaterra),		  
+            slides.activate(6),
+            emitSlideChange
+          )
+        )
+		//El siguiente es nuestro
+		.addState(
+          seq.step(7),
+          O.Parallel(              
+			el.map.actions.setZoom(6),
+			el.map.actions.panTo(el.colony),		  
+            slides.activate(7),
+            emitSlideChange
+          )
+        )
+		.addState(
+          seq.step(8),
+          O.Parallel(              
+			el.map.actions.setZoom(6),
+			el.map.actions.panTo(el.colony),		  
+            slides.activate(8),
+            emitSlideChange
+          )
+        )
+		;
+
+      el.story.go(0);
+    }
+
+    function init() {
+      initMap();
+      loadCdbData();
+      initOdyssey(O);
+      listenSlideChange();            
+    } 
+
+    return {
+      init : init,
+      el : el
+    }
+
+  })(window, document, jQuery, O);
+
+  window.addEventListener('DOMContentLoaded', function(){
+    app.odysseyTest.init();
+  });
+ 
+
+  </script>
+   
+               
+           
+    
+</body>
+</html>
