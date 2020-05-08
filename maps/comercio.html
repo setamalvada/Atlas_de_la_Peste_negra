@@ -5,12 +5,12 @@
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="icon" type="image/x-icon" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
-  <link rel="icon" type="image/png" href="http://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+  <link rel="icon" type="image/x-icon" href="https://cartodb.github.io/odyssey.js/sandbox/favicon.png">
+  <link rel="icon" type="image/png" href="https://cartodb.github.io/odyssey.js/sandbox/favicon.png">
 
-  <link rel="stylesheet" href="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/themes/css/cartodb.css">
-  <link rel="stylesheet" href="http://cartodb.github.io/odyssey.js/sandbox/css/slides.css">
-  <script src="http://cartodb.github.io/odyssey.js/vendor/modernizr-2.6.2.min.js"></script>
+  <link rel="stylesheet" href="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/themes/css/cartodb.css">
+  <link rel="stylesheet" href="https://cartodb.github.io/odyssey.js/sandbox/css/slides.css">
+  <script src="https://cartodb.github.io/odyssey.js/vendor/modernizr-2.6.2.min.js"></script>
 </head>
 <body>
   <div id="map" style="width: 100%; height: 100%;"></div>
@@ -28,11 +28,11 @@
 
   <div id="credits">
     <span class="title" id="title">Title</span>
-    <span class="author"><strong id="author">By Name using</strong> <a href="http://cartodb.github.io/odyssey.js/">Odyssey.js</a><span>
+    <span class="author"><strong id="author">By Name using</strong> <a href="https://cartodb.github.io/odyssey.js/">Odyssey.js</a><span>
   </span></span></div>
 
-  <script src="http://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
-  <script src="http://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
+  <script src="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/cartodb.js"></script>
+  <script src="https://cartodb.github.io/odyssey.js/dist/odyssey.js" charset="UTF-8"></script>
 
   <script>
     var resizePID;
@@ -112,7 +112,7 @@
       init: function() {
         var seq = O.Triggers.Sequential();
 
-        var baseurl = this.baseurl = 'http://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}';
+        var baseurl = this.baseurl = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}';
         var map = this.map = L.map('map').setView([0, 0.0], 4);
         var basemap = this.basemap = L.tileLayer(baseurl, {
           attribution: 'data OSM - map CartoDB'
@@ -142,12 +142,12 @@
         this.story.clear();
 
         if (this.baseurl && (this.baseurl !== actions.global.baseurl)) {
-          this.baseurl = actions.global.baseurl || 'http://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}';
+          this.baseurl = actions.global.baseurl || 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}';
 
           this.basemap.setUrl(this.baseurl);
         }
 
-        if (this.cartoDBLayer && ("http://"+self.cartoDBLayer.options.user_name+".cartodb.com/api/v2/viz/"+self.cartoDBLayer.options.layer_definition.stat_tag+"/viz.json" !== actions.global.vizjson)) {
+        if (this.cartoDBLayer && ("https://"+self.cartoDBLayer.options.user_name+".cartodb.com/api/v2/viz/"+self.cartoDBLayer.options.layer_definition.stat_tag+"/viz.json" !== actions.global.vizjson)) {
           this.map.removeLayer(this.cartoDBLayer);
 
           this.cartoDBLayer = null;
@@ -247,12 +247,12 @@
     ga('send', 'pageview');
   </script>
 
-  <script type="text/javascript" src="http://fast.fonts.net/jsapi/3af16084-ba56-49ca-b37d-0b49b59e1927.js"></script>
+  <script type="text/javascript" src="https://fast.fonts.net/jsapi/3af16084-ba56-49ca-b37d-0b49b59e1927.js"></script>
 
 <script id="md_template" type="text/template">```
 -title: "Atlas de la Peste Negra"
 -author: "Clara Rodríguez Fernández"
--baseurl: "http://a.tiles.mapbox.com/v4/clara92r.dwdxcsnz/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg"
+-baseurl: "https://a.tiles.mapbox.com/v4/clara92r.dwdxcsnz/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiY2xhcmE5MnIiLCJhIjoiYjI4MjBhOTMzOWFlNWI5YTNmZjk0ODM4Y2NjYzk2MTYifQ.A2pArieN8zLVdKxHdQFAsg"
 -vizjson:"https://clara92r.carto.com/api/v2/viz/769b008c-78ca-11e5-a0e6-0ea31932ec1d/viz.json"
 ```
 
